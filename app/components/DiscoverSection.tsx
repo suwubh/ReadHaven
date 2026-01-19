@@ -8,47 +8,49 @@ interface BookSeriesProps {
 function BookSeries({ userName, books, likedBook, themes }: BookSeriesProps) {
   return (
     <div className="book-series-1">
-      <div className="book-liked-series">
-        <div className="liked-text">Because {userName} liked...</div>
-        <div className="discovered-text">She discovered:</div>
+      <div className="liked-text">Because {userName} liked...</div>
+      <div className="discovered-text">She discovered:</div>
+      
+      <div className="book-flow">
+        {/* Books row */}
+        {books.map((book, index) => (
+          <img 
+            key={index}
+            src={book}
+            alt={`Book ${index + 1}`}
+            className="book-image"
+          />
+        ))}
 
-        <div className="book-row">
-          {books.map((book, index) => (
-            <img 
-              key={index}
-              src={book}
-              alt={`Book ${index + 1}`}
-              className="book-image"
-            />
+        {/* Arrow */}
+        <svg 
+          className="arrow-image" 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="50" 
+          height="50" 
+          viewBox="0 0 24 24" 
+          fill="#b9b2a4"
+        >
+          <path d="M22 12l-8 8v-6h-8v-4h8v-6z" />
+        </svg>
+
+        {/* Liked book */}
+        <div className="liked-book">
+          <img 
+            src={likedBook}
+            alt={`${userName} liked this book`}
+            className="book-image liked"
+          />
+        </div>
+
+        {/* Passage text */}
+        <div className="passage-text">
+          {themes.map((theme, index) => (
+            <span key={index}>
+              {theme}
+              {index < themes.length - 1 && <>,<br /></>}
+            </span>
           ))}
-
-          <div className="arrow-and-liked">
-            <svg 
-              className="arrow-image" 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="50" 
-              height="50" 
-              viewBox="0 0 24 24" 
-              fill="#b9b2a4"
-            >
-              <path d="M22 12l-8 8v-6h-8v-4h8v-6z" />
-            </svg>
-            <div className="liked-book">
-              <img 
-                src={likedBook}
-                alt={`${userName} liked this book`}
-                className="book-image liked"
-              />
-              <div className="passage-text">
-                {themes.map((theme, index) => (
-                  <span key={index}>
-                    {theme}
-                    {index < themes.length - 1 && <>,<br /></>}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
