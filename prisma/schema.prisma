@@ -85,16 +85,32 @@ model Review {
 }
 
 model Shelf {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   name      String
   userId    String
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  books     ShelfBook[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("shelves")
+}
+
+model ShelfBook {
+  id        String   @id @default(cuid())
+  shelfId   String
+  bookId    String
+  title     String
+  authors   String[]
+  thumbnail String?
+  addedAt   DateTime @default(now())
+
+  shelf Shelf @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+
+  @@unique([shelfId, bookId])
+  @@map("shelf_books")
 }
 
 model ReadingGoal {

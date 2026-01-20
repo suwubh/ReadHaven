@@ -2,6 +2,7 @@
 import React from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import HeroSection from './components/HeroSection';
 import RecommendationsSection from './components/RecommendationsSection';
 import DiscoverSection from './components/DiscoverSection';
@@ -12,8 +13,44 @@ import ProfileContainer from './components/ProfileContainer';
 import RightSidebar from './components/RightSidebar';
 import Footer from './components/Footer';
 
+async function getUserStats(userId: string) {
+  const [shelves, reviews, readingGoal] = await Promise.all([
+    prisma.shelf.findMany({
+      where: { userId },
+      include: {
+        books: true,
+      },
+    }),
+    prisma.review.findMany({
+      where: { userId },
+    }),
+    prisma.readingGoal.findFirst({
+      where: {
+        userId,
+        year: new Date().getFullYear(),
+      },
+    }),
+  ]);
+
+     const totalBooks = shelves.reduce((sum, shelf) => sum + shelf.books.length, 0);
+  const reviewsCount = reviews.length;
+
+  return {
+    shelves,
+    totalBooks,
+    reviewsCount,
+    readingGoal,
+  };
+}
+
 export default async function Home() {
   const session = await getServerSession(authOptions);
+
+  let userStats = null;
+
+  if (session?.user?.id) {
+    userStats = await getUserStats(session.user.id);
+  }
 
   return (
     <main>
@@ -29,7 +66,7 @@ export default async function Home() {
 
         <aside className="right-column">
           {session?.user ? (
-            <ProfileContainer user={session.user} />
+            <ProfileContainer user={session.user} stats={userStats} />
           ) : (
             <SignInContainer />
           )}
