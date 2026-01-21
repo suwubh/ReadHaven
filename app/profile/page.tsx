@@ -39,7 +39,9 @@ async function getUserProfileData(userId: string) {
   ]);
 
   const totalBooks = shelves.reduce((sum, shelf) => sum + shelf.books.length, 0);
-  const currentYearGoal = readingGoals.find(g => g.year === new Date().getFullYear());
+  const currentYearGoal =
+    readingGoals.find(g => g.year === new Date().getFullYear()) ?? null;
+
 
   // Get favorite genres from reviewed books
   const reviewedBookIds = reviews.map(r => r.bookId);
