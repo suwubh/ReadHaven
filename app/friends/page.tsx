@@ -1,12 +1,53 @@
 // app/friends/page.tsx
 
+import type { Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import FriendsPageClient from './FriendsPageClient';
 
-async function getFriendsData(userId: string) {
+type FriendshipWithUsers = Prisma.FriendshipGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+        image: true;
+      };
+    };
+    friend: {
+      select: {
+        id: true;
+        name: true;
+        email: true;
+        image: true;
+      };
+    };
+  };
+}>;
+
+type ActivityWithUser = Prisma.ActivityGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        name: true;
+        image: true;
+      };
+    };
+  };
+}>;
+
+type FriendsData = {
+  friends: FriendshipWithUsers[];
+  pendingRequests: FriendshipWithUsers[];
+  sentRequests: FriendshipWithUsers[];
+  activities: ActivityWithUser[];
+};
+
+async function getFriendsData(userId: string): Promise<FriendsData> {
   const [friends, pendingRequests, sentRequests, activities] = await Promise.all([
     // Accepted friends
     prisma.friendship.findMany({
@@ -50,6 +91,14 @@ async function getFriendsData(userId: string) {
             image: true,
           },
         },
+        friend: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
       },
     }),
     // Pending requests sent
@@ -59,6 +108,14 @@ async function getFriendsData(userId: string) {
         status: 'pending',
       },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
         friend: {
           select: {
             id: true,
