@@ -7,9 +7,9 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +26,6 @@ async function getBookData(id: string) {
   });
 
   if (!response.ok) {
-    // ❌ never throw Error() in App Router data fetch
-    // ✅ tell Next.js to render 404 instead
     notFound();
   }
 
@@ -42,10 +40,7 @@ async function getUserBookData(userId: string | undefined, bookId: string) {
       where: { userId },
     }),
     prisma.review.findFirst({
-      where: {
-        userId,
-        bookId,
-      },
+      where: { userId, bookId },
     }),
   ]);
 
@@ -53,10 +48,11 @@ async function getUserBookData(userId: string | undefined, bookId: string) {
 }
 
 export default async function BookDetailPage({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
+  const { id } = await params;
 
-  const book = await getBookData(params.id);
-  const userData = await getUserBookData(session?.user?.id, params.id);
+  const session = await getServerSession(authOptions);
+  const book = await getBookData(id);
+  const userData = await getUserBookData(session?.user?.id, id);
 
   return (
     <BookDetailClient
