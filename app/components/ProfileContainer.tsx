@@ -22,6 +22,7 @@ interface Stats {
   shelves: Shelf[];
   totalBooks: number;
   reviewsCount: number;
+  friendsCount: number;
   readingGoal: ReadingGoal | null;
 }
 
@@ -76,7 +77,7 @@ export default function ProfileContainer({ user, stats }: ProfileContainerProps)
           <span className="stat-label">Reviews</span>
         </div>
         <div className="stat-item">
-          <span className="stat-number">0</span>
+          <span className="stat-number">{stats?.friendsCount || 0}</span>
           <span className="stat-label">Friends</span>
         </div>
       </div>
@@ -138,6 +139,12 @@ export default function ProfileContainer({ user, stats }: ProfileContainerProps)
             <Link href="/friends">
               <i className="fas fa-users"></i>
               My Friends
+            </Link>
+          </li>
+          <li>
+            <Link href="/statistics">
+              <i className="fas fa-chart-bar"></i>
+              Reading Stats
             </Link>
           </li>
           <li>

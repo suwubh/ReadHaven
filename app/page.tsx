@@ -1,4 +1,3 @@
-// app/page.tsx
 import React from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -14,7 +13,7 @@ import RightSidebar from './components/RightSidebar';
 import Footer from './components/Footer';
 
 async function getUserStats(userId: string) {
-  const [shelves, reviews, readingGoal] = await Promise.all([
+  const [shelves, reviews, readingGoal, friendships] = await Promise.all([
     prisma.shelf.findMany({
       where: { userId },
       include: {
@@ -30,22 +29,31 @@ async function getUserStats(userId: string) {
         year: new Date().getFullYear(),
       },
     }),
+    prisma.friendship.findMany({
+      where: {
+        OR: [
+          { userId, status: 'accepted' },
+          { friendId: userId, status: 'accepted' },
+        ],
+      },
+    }),
   ]);
 
-     const totalBooks = shelves.reduce((sum, shelf) => sum + shelf.books.length, 0);
+  const totalBooks = shelves.reduce((sum, shelf) => sum + shelf.books.length, 0);
   const reviewsCount = reviews.length;
+  const friendsCount = friendships.length;
 
   return {
     shelves,
     totalBooks,
     reviewsCount,
+    friendsCount,
     readingGoal,
   };
 }
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
-
   let userStats = null;
 
   if (session?.user?.id) {

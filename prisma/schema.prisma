@@ -27,9 +27,44 @@ model User {
   reviews       Review[]
   shelves       Shelf[]
   readingGoals  ReadingGoal[]
+
+  friendshipsInitiated Friendship[] @relation("FriendshipInitiator")
+  friendshipsReceived  Friendship[] @relation("FriendshipReceiver")
+  activities           Activity[]
   
   @@map("users")
 }
+
+model Friendship {
+  id         String   @id @default(cuid())
+  userId     String
+  friendId   String
+  status     String   // "pending", "accepted", "blocked"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User @relation("FriendshipInitiator", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendshipReceiver", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@map("friendships")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "added_book", "reviewed_book", "completed_challenge"
+  bookId      String?
+  bookTitle   String?
+  bookCover   String?
+  content     String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
+}
+
 
 model Account {
   id                String  @id @default(cuid())
