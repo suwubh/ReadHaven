@@ -100,7 +100,7 @@ export default function SearchClient() {
             className="search-input-large"
           />
           <button type="submit" className="search-btn">
-            🔍 Search
+            Search
           </button>
         </form>
       </div>
@@ -108,7 +108,7 @@ export default function SearchClient() {
       <div className="search-results-container">
         {loading && (
           <div className="loading-spinner" aria-live="polite">
-            <span>🔄 Searching...</span>
+            <span>Searching...</span>
           </div>
         )}
 
@@ -120,7 +120,6 @@ export default function SearchClient() {
 
         {!loading && !error && query && books.length === 0 && (
           <div className="no-results">
-            <div className="no-results-icon">📚</div>
             <h3>No books found for "{query}"</h3>
             <p>Try different keywords or check your spelling</p>
           </div>
