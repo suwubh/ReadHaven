@@ -12,6 +12,7 @@ import SignInContainer from './components/SignInContainer';
 import ProfileContainer from './components/ProfileContainer';
 import FeedSidebar from './components/FeedSidebar';
 import Footer from './components/Footer';
+import ScrollToSearchButton from './components/ScrollToSearchButton';
 
 async function getUserStats(userId: string) {
   const [shelves, reviews, readingGoal, friendships] = await Promise.all([
@@ -95,6 +96,7 @@ export default async function Home() {
 
   return (
     <main>
+      <ScrollToSearchButton />
       <HeroSection />
 
       <section className="page-layout">
