@@ -1,3 +1,4 @@
+// app/page.tsx
 import React from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -9,7 +10,7 @@ import AwardsSection from './components/AwardsSection';
 import SearchBrowseSection from './components/SearchBrowseSection';
 import SignInContainer from './components/SignInContainer';
 import ProfileContainer from './components/ProfileContainer';
-import RightSidebar from './components/RightSidebar';
+import FeedSidebar from './components/FeedSidebar';
 import Footer from './components/Footer';
 
 async function getUserStats(userId: string) {
@@ -52,9 +53,41 @@ async function getUserStats(userId: string) {
   };
 }
 
+async function getRecentPosts() {
+  const posts = await prisma.post.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+          userId: true,
+        },
+      },
+      comments: {
+        select: {
+          id: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: 10,
+  });
+
+  return posts;
+}
+
 export default async function Home() {
   const session = await getServerSession(authOptions);
   let userStats = null;
+  const recentPosts = await getRecentPosts();
 
   if (session?.user?.id) {
     userStats = await getUserStats(session.user.id);
@@ -78,7 +111,7 @@ export default async function Home() {
           ) : (
             <SignInContainer />
           )}
-          <RightSidebar />
+          <FeedSidebar posts={recentPosts} currentUserId={session?.user?.id} />
         </aside>
       </section>
 

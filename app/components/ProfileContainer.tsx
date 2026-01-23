@@ -124,6 +124,18 @@ export default function ProfileContainer({ user, stats }: ProfileContainerProps)
         <h4 className="section-title">Quick Links</h4>
         <ul className="quick-links">
           <li>
+            <Link href="/create-post">
+              <i className="fas fa-plus-circle"></i>
+              Create Post
+            </Link>
+          </li>
+          <li>
+            <Link href="/feed">
+              <i className="fas fa-rss"></i>
+              Book Feed
+            </Link>
+          </li>
+          <li>
             <Link href="/profile">
               <i className="fas fa-user"></i>
               View Profile
@@ -151,12 +163,6 @@ export default function ProfileContainer({ user, stats }: ProfileContainerProps)
             <Link href="/reading-challenge">
               <i className="fas fa-trophy"></i>
               Reading Challenge
-            </Link>
-          </li>
-          <li>
-            <Link href="/settings">
-              <i className="fas fa-cog"></i>
-              Settings
             </Link>
           </li>
         </ul>
