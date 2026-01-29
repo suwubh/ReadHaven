@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 ReadHaven
 
-## Getting Started
+ReadHaven is a modern **book discovery, reading, and social platform** built with **Next.js**. Along with exploring books and managing reading lists, ReadHaven also includes a **social feed (similar to an Instagram feed)** where users can share posts about books, interact through likes, and engage in discussions via comments.
 
-First, run the development server:
+🔗 **Live Demo:** [https://read-haven-sandy.vercel.app](https://read-haven-sandy.vercel.app)
+
+---
+
+## 🚀 Features
+
+### 📖 Book Discovery & Reading
+
+* Browse a curated collection of books
+* Search and filter books
+* View detailed book information
+* Save books to favorites
+* Manage personal reading lists
+
+### 🧵 Social Feed (Instagram-like)
+
+* Create posts related to books (reviews, thoughts, highlights, etc.)
+* Like posts shared by other users
+* Comment on posts and engage in discussions
+* Scrollable feed experience similar to social media platforms
+
+### ⚡ Platform Highlights
+
+* Fast and responsive UI powered by Next.js
+* Clean, modern, and intuitive user experience
+* Scalable architecture for adding more social features
+
+---
+
+## 🧱 Built With
+
+**Frontend**
+
+* Next.js (React framework)
+* TypeScript
+* CSS Modules
+
+**Backend / Data**
+
+* API routes (Next.js)
+* Prisma (optional / extendable)
+* Database support (can be extended)
+
+**Deployment**
+
+* Vercel
+
+---
+
+## 📦 Getting Started
+
+Follow these steps to run the project locally:
+
+### Clone the repository
+
+```bash
+git clone https://github.com/suwubh/ReadHaven.git
+```
+
+### Install dependencies
+
+```bash
+cd ReadHaven
+npm install
+```
+
+### Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠 Project Structure
 
-## Learn More
+```
+📦 app        # Main application routes and pages
+📦 lib        # Utility and helper functions
+📦 prisma    # Database schema and ORM setup
+📦 public    # Static assets
+📦 types     # TypeScript type definitions
+📄 next.config.ts
+📄 package.json
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Use Cases
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* Build a social platform for readers
+* Learn how to implement feed-based systems in Next.js
+* Experiment with likes, comments, and post interactions
+* Extend into a full-fledged reading community
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open-source. You are free to use, modify, and distribute it.
+
+---
+
+## ❤️ Acknowledgements
+
+Inspired by modern social media platforms and book discovery apps. Built with love for readers and developers alike.
