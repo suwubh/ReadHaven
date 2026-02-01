@@ -2,7 +2,7 @@
 
 A modern, full-stack reading management and social platform built with Next.js 14, where book lovers can discover, track, and share their reading journey.
 
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791)
@@ -56,7 +56,7 @@ A modern, full-stack reading management and social platform built with Next.js 1
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Custom CSS with responsive design
 - **Authentication UI**: NextAuth.js components
