@@ -2,6 +2,20 @@
 
 import { NextResponse } from 'next/server';
 
+interface Recommendation {
+  title: string;
+  author: string;
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    (error as { name?: unknown }).name === 'AbortError'
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -31,31 +45,49 @@ Format as JSON array:
   {"title": "Book Title", "author": "Author Name"}
 ]
 
-Only JSON, no extra text.`;
+    Only JSON, no extra text.`;
 
     // Use FASTER model: llama-3.1-8b-instant (much faster than 70b)
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant', // FAST MODEL
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a book expert. Respond only with JSON arrays.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3, // Lower = faster
-        max_tokens: 500,
-      }),
-    });
+    const controller = new AbortController();
+    const groqTimeoutMs = 8000;
+    const timeoutId = setTimeout(() => controller.abort(), groqTimeoutMs);
+
+    let groqResponse: Response;
+    try {
+      groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant', // FAST MODEL
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a book expert. Respond only with JSON arrays.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3, // Lower = faster
+          max_tokens: 500,
+        }),
+      });
+    } catch (error) {
+      if (isAbortError(error)) {
+        return NextResponse.json(
+          { error: `Groq request timed out after ${groqTimeoutMs}ms` },
+          { status: 504 }
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!groqResponse.ok) {
       const errorData = await groqResponse.text();
@@ -67,7 +99,28 @@ Only JSON, no extra text.`;
     }
 
     const groqData = await groqResponse.json();
-    const content = groqData.choices[0]?.message?.content;
+
+    if (!groqData || !Array.isArray(groqData.choices) || groqData.choices.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid Groq API response: missing choices' },
+        { status: 500 }
+      );
+    }
+
+    const firstChoice = groqData.choices[0];
+    if (
+      !firstChoice ||
+      !firstChoice.message ||
+      !firstChoice.message.content ||
+      typeof firstChoice.message.content !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid Groq API response: missing message content' },
+        { status: 500 }
+      );
+    }
+
+    const content = firstChoice.message.content;
 
     if (!content) {
       return NextResponse.json(
@@ -76,10 +129,11 @@ Only JSON, no extra text.`;
       );
     }
 
-    let recommendations;
+    const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    let parsedRecommendations: unknown;
     try {
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      recommendations = JSON.parse(cleanContent);
+      parsedRecommendations = JSON.parse(cleanContent);
     } catch (parseError) {
       console.error('Parse error:', parseError);
       return NextResponse.json(
@@ -88,14 +142,44 @@ Only JSON, no extra text.`;
       );
     }
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    
+    if (!Array.isArray(parsedRecommendations) || parsedRecommendations.length === 0) {
+      return NextResponse.json(
+        { error: 'Groq response format error: expected a non-empty recommendations array' },
+        { status: 500 }
+      );
+    }
+
+    if (
+      !parsedRecommendations.every(
+        (item) =>
+          item &&
+          typeof item === 'object' &&
+          'title' in item &&
+          'author' in item &&
+          typeof (item as { title?: unknown }).title === 'string' &&
+          typeof (item as { author?: unknown }).author === 'string'
+      )
+    ) {
+      return NextResponse.json(
+        { error: 'Groq response format error: invalid recommendation entries' },
+        { status: 500 }
+      );
+    }
+
+    const recommendations = parsedRecommendations as Recommendation[];
+
+    const baseUrl = new URL(request.url).origin;
+     
     // PARALLEL PROCESSING - Fetch all books at once instead of one by one
-    const bookPromises = recommendations.map(async (rec: any) => {
+    const bookPromises = recommendations.map(async (rec: Recommendation) => {
       try {
         const searchQuery = `${rec.title} ${rec.author}`;
+        const searchUrl = new URL('/api/books/search', baseUrl);
+        searchUrl.searchParams.set('q', searchQuery);
+        searchUrl.searchParams.set('page', '1');
+
         const searchResponse = await fetch(
-          `${baseUrl}/api/books/search?q=${encodeURIComponent(searchQuery)}&page=1`,
+          searchUrl,
           { cache: 'no-store' }
         );
 
@@ -105,10 +189,11 @@ Only JSON, no extra text.`;
         if (!searchData.books || searchData.books.length === 0) return null;
 
         const searchBook = searchData.books[0];
-        
+         
         // Fetch full details in parallel too
+        const detailUrl = new URL(`/api/books/${searchBook.id}`, baseUrl);
         const detailResponse = await fetch(
-          `${baseUrl}/api/books/${searchBook.id}`,
+          detailUrl,
           { cache: 'no-store' }
         );
         
@@ -146,8 +231,12 @@ Only JSON, no extra text.`;
     if (books.length < 3) {
       try {
         const categorySearch = category.replace(/best\s+/i, '').replace(/\d{4}/g, '').trim();
+        const fallbackUrl = new URL('/api/books/search', baseUrl);
+        fallbackUrl.searchParams.set('q', categorySearch);
+        fallbackUrl.searchParams.set('page', '1');
+
         const fallbackResponse = await fetch(
-          `${baseUrl}/api/books/search?q=${encodeURIComponent(categorySearch)}&page=1`,
+          fallbackUrl,
           { cache: 'no-store' }
         );
 

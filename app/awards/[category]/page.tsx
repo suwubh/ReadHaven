@@ -13,7 +13,7 @@ function formatCategoryName(slug: string): string {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
-    .replace(/And/g, '&');
+    .replace(/\bAnd\b/g, '&');
 }
 
 export default async function AwardsPage({ params }: PageProps) {

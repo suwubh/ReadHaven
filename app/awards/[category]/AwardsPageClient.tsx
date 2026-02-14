@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 interface Book {
@@ -25,11 +25,7 @@ export default function AwardsPageClient({ category }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAwardBooks();
-  }, [category]);
-
-  const fetchAwardBooks = async () => {
+  const fetchAwardBooks = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -54,7 +50,11 @@ export default function AwardsPageClient({ category }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category]);
+
+  useEffect(() => {
+    fetchAwardBooks();
+  }, [category, fetchAwardBooks]);
 
   const getDescriptionPreview = (description: string) => {
     if (!description || description === 'No description available') {
@@ -69,6 +69,14 @@ export default function AwardsPageClient({ category }: Props) {
       return cleanDescription.substring(0, 250) + '...';
     }
     return cleanDescription;
+  };
+
+  const formatPublishedYear = (publishedDate: string) => {
+    if (!publishedDate) return '';
+    const timestamp = Date.parse(publishedDate);
+    if (Number.isNaN(timestamp)) return publishedDate;
+    const year = new Date(timestamp).getFullYear();
+    return Number.isNaN(year) ? publishedDate : String(year);
   };
 
   return (
@@ -93,7 +101,7 @@ export default function AwardsPageClient({ category }: Props) {
           <div className="awards-error">
             <i className="fas fa-exclamation-circle"></i>
             <p>{error}</p>
-            <button onClick={fetchAwardBooks} className="retry-btn">
+            <button type="button" onClick={fetchAwardBooks} className="retry-btn">
               Try Again
             </button>
           </div>
@@ -150,7 +158,7 @@ export default function AwardsPageClient({ category }: Props) {
 
                   {book.publishedDate && (
                     <p className="awards-published">
-                      Published: {new Date(book.publishedDate).getFullYear() || book.publishedDate}
+                      Published: {formatPublishedYear(book.publishedDate)}
                     </p>
                   )}
 

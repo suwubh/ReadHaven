@@ -27,7 +27,8 @@ export default function AwardsSection() {
   };
 
   const getCategorySlug = (category: string) => {
-    return category.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
+    const normalized = category.replace(/&/g, ' and ').replace(/\s+/g, ' ').trim();
+    return normalized.toLowerCase().replace(/\s+/g, '-');
   };
 
   return (
