@@ -1,7 +1,11 @@
+'use client';
+
+import Link from 'next/link';
+
 export default function AwardsSection() {
   const categories = {
     column1: [
-      'Best Books 2023',
+      'Best Books 2025',
       'Best Fiction',
       'Best Historical Fiction',
       'Best Mystery & Thriller',
@@ -22,22 +26,34 @@ export default function AwardsSection() {
     ],
   };
 
+  const getCategorySlug = (category: string) => {
+    return category.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
+  };
+
   return (
     <section className="awards-section">
       <div className="container"></div>
-      <h1>ReadHaven Choice Awards: The Best Books 2023</h1>
+      <h1>ReadHaven Choice Awards: The Best Books 2025</h1>
       <div className="categories">
         <div className="column">
           <ul>
             {categories.column1.map((category, index) => (
-              <li key={index}>{category}</li>
+              <li key={index}>
+                <Link href={`/awards/${getCategorySlug(category)}`}>
+                  {category}
+                </Link>
+              </li>
             ))}
           </ul>
         </div>
         <div className="column">
           <ul>
             {categories.column2.map((category, index) => (
-              <li key={index}>{category}</li>
+              <li key={index}>
+                <Link href={`/awards/${getCategorySlug(category)}`}>
+                  {category}
+                </Link>
+              </li>
             ))}
           </ul>
         </div>
