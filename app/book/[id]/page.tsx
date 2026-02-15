@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import BookDetailClient from './BookDetailClient';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
+import { ensureDefaultShelves } from '@/lib/shelves';
 
 interface PageProps {
   params: Promise<{
@@ -34,6 +35,8 @@ async function getBookData(id: string) {
 
 async function getUserBookData(userId: string | undefined, bookId: string) {
   if (!userId) return null;
+
+  await ensureDefaultShelves(userId);
 
   const [shelves, review] = await Promise.all([
     prisma.shelf.findMany({

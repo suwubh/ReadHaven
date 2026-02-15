@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import ShelfPageClient from './ShelfPageClient';
+import { ensureDefaultShelves } from '@/lib/shelves';
+import { shelfNameToLegacySlug, shelfNameToSlug } from '@/lib/shelf-slug';
 
 interface PageProps {
   params: Promise<{
@@ -12,31 +14,19 @@ interface PageProps {
   }>;
 }
 
-function formatShelfName(slug: string): string {
-  // Handle special cases first
-  const specialCases: { [key: string]: string } = {
-    'want-to-read': 'Want to Read',
-    'currently-reading': 'Currently Reading',
-    'read': 'Read',
-    'favorites': 'Favorites',
-  };
+async function getShelfData(userId: string, shelfSlug: string) {
+  await ensureDefaultShelves(userId);
 
-  if (specialCases[slug]) {
-    return specialCases[slug];
-  }
+  const normalizedSlug = decodeURIComponent(shelfSlug).toLowerCase();
+  const normalizedName = normalizedSlug.replace(/-/g, ' ').trim();
 
-  // Default formatting for custom shelves
-  return slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-async function getShelfData(userId: string, shelfName: string) {
-  const shelf = await prisma.shelf.findFirst({
+  const shelfByName = await prisma.shelf.findFirst({
     where: {
       userId,
-      name: shelfName,
+      name: {
+        equals: normalizedName,
+        mode: 'insensitive',
+      },
     },
     include: {
       books: {
@@ -47,7 +37,28 @@ async function getShelfData(userId: string, shelfName: string) {
     },
   });
 
-  return shelf;
+  if (shelfByName) {
+    return shelfByName;
+  }
+
+  const userShelves = await prisma.shelf.findMany({
+    where: { userId },
+    include: {
+      books: {
+        orderBy: {
+          addedAt: 'desc',
+        },
+      },
+    },
+  });
+
+  return (
+    userShelves.find((candidate) => {
+      const canonicalSlug = shelfNameToSlug(candidate.name);
+      const legacySlug = shelfNameToLegacySlug(candidate.name);
+      return normalizedSlug === canonicalSlug || normalizedSlug === legacySlug;
+    }) ?? null
+  );
 }
 
 export default async function ShelfPage({ params }: PageProps) {
@@ -58,14 +69,15 @@ export default async function ShelfPage({ params }: PageProps) {
   }
 
   const resolvedParams = await params;
-  const shelfName = formatShelfName(resolvedParams.name);
-  const shelf = await getShelfData(session.user.id, shelfName);
+  const shelf = await getShelfData(session.user.id, resolvedParams.name);
+  const attemptedShelf = decodeURIComponent(resolvedParams.name);
+  const displayShelfName = attemptedShelf.replace(/-/g, ' ').trim() || attemptedShelf;
 
   if (!shelf) {
     return (
       <div className="shelf-not-found">
         <h1>Shelf not found</h1>
-        <p>The shelf "{shelfName}" does not exist.</p>
+        <p>The shelf "{displayShelfName || '(unknown)'}" does not exist.</p>
       </div>
     );
   }

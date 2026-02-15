@@ -13,8 +13,11 @@ import ProfileContainer from './components/ProfileContainer';
 import FeedSidebar from './components/FeedSidebar';
 import Footer from './components/Footer';
 import ScrollToSearchButton from './components/ScrollToSearchButton';
+import { ensureDefaultShelves } from '@/lib/shelves';
 
 async function getUserStats(userId: string) {
+  await ensureDefaultShelves(userId);
+
   const [shelves, reviews, readingGoal, friendships] = await Promise.all([
     prisma.shelf.findMany({
       where: { userId },

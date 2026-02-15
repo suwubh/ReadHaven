@@ -78,11 +78,16 @@ export default function BookDetailClient({
         }),
       });
 
-      if (response.ok) {
-        alert('Book added to shelf!');
-        setShowShelfDropdown(false);
-        router.refresh();
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        alert(result?.error || 'Failed to add book to shelf');
+        return;
       }
+
+      alert(result?.message || 'Book added to shelf!');
+      setShowShelfDropdown(false);
+      router.refresh();
     } catch (error) {
       console.error('Error adding to shelf:', error);
       alert('Failed to add book to shelf');
@@ -190,15 +195,19 @@ export default function BookDetailClient({
                     </button>
                     {showShelfDropdown && (
                       <div className="shelf-dropdown">
-                        {userShelves.map((shelf) => (
-                          <button
-                            key={shelf.id}
-                            onClick={() => handleAddToShelf(shelf.id)}
-                            className="shelf-option"
-                          >
-                            {shelf.name}
-                          </button>
-                        ))}
+                        {userShelves.length === 0 ? (
+                          <p className="shelf-option-empty">No shelves available yet.</p>
+                        ) : (
+                          userShelves.map((shelf) => (
+                            <button
+                              key={shelf.id}
+                              onClick={() => handleAddToShelf(shelf.id)}
+                              className="shelf-option"
+                            >
+                              {shelf.name}
+                            </button>
+                          ))
+                        )}
                       </div>
                     )}
                   </div>

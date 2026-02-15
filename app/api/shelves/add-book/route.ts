@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureDefaultShelves } from '@/lib/shelves';
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +28,8 @@ export async function POST(request: Request) {
     }
 
     // Verify the shelf belongs to the user
+    await ensureDefaultShelves(session.user.id);
+
     const shelf = await prisma.shelf.findFirst({
       where: {
         id: shelfId,

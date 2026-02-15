@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Session } from 'next-auth';
+import { shelfNameToLegacySlug, shelfNameToSlug } from '@/lib/shelf-slug';
 
 interface Review {
   id: string;
@@ -263,18 +264,26 @@ export default function ProfilePageClient({ data, session }: Props) {
           <div className="shelves-overview">
             <h2>My Shelves</h2>
             <div className="shelves-grid">
-              {data.shelves.map((shelf) => (
+              {data.shelves.map((shelf) => {
+                const slug =
+                  shelfNameToSlug(shelf.name) ||
+                  shelfNameToLegacySlug(shelf.name) ||
+                  'untitled-shelf';
+                const displayName = shelf.name.trim() || 'Untitled Shelf';
+
+                return (
                 <Link
                   key={shelf.id}
-                  href={`/shelf/${shelf.name.toLowerCase().replace(/ /g, '-')}`}
+                  href={`/shelf/${encodeURIComponent(slug)}`}
                   className="shelf-card-link"
                 >
                   <div className="shelf-card">
-                    <h3>{shelf.name}</h3>
+                    <h3>{displayName}</h3>
                     <p className="shelf-book-count">{shelf.books.length} books</p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
 

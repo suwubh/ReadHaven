@@ -5,8 +5,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import ProfilePageClient from './ProfilePageClient';
+import { ensureDefaultShelves } from '@/lib/shelves';
 
 async function getUserProfileData(userId: string) {
+  await ensureDefaultShelves(userId);
+
   const [user, shelves, reviews, readingGoals] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
