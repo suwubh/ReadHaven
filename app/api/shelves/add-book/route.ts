@@ -27,9 +27,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify the shelf belongs to the user
+    // Ensure default shelves exist for users created outside the custom signup flow.
     await ensureDefaultShelves(session.user.id);
 
+    // Verify the requested shelf belongs to the current user.
     const shelf = await prisma.shelf.findFirst({
       where: {
         id: shelfId,

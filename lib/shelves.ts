@@ -27,5 +27,6 @@ export async function ensureDefaultShelves(userId: string) {
       name,
       isDefault: true,
     })),
+    skipDuplicates: true,
   });
 }

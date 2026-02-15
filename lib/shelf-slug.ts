@@ -1,7 +1,13 @@
-export function shelfNameToSlug(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, '-');
+function normalizeName(name: unknown): string {
+  return typeof name === 'string' ? name : String(name ?? '');
 }
 
-export function shelfNameToLegacySlug(name: string): string {
-  return name.toLowerCase().replace(/ /g, '-');
+export function shelfNameToSlug(name: unknown): string {
+  const normalizedName = normalizeName(name);
+  return normalizedName.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+export function shelfNameToLegacySlug(name: unknown): string {
+  const normalizedName = normalizeName(name);
+  return normalizedName.toLowerCase().replace(/ /g, '-');
 }

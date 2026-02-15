@@ -17,16 +17,27 @@ interface PageProps {
 async function getShelfData(userId: string, shelfSlug: string) {
   await ensureDefaultShelves(userId);
 
-  const normalizedSlug = decodeURIComponent(shelfSlug).toLowerCase();
+  const decodedSlug = decodeURIComponent(shelfSlug).trim();
+  const normalizedSlug = decodedSlug.toLowerCase();
   const normalizedName = normalizedSlug.replace(/-/g, ' ').trim();
 
   const shelfByName = await prisma.shelf.findFirst({
     where: {
       userId,
-      name: {
-        equals: normalizedName,
-        mode: 'insensitive',
-      },
+      OR: [
+        {
+          name: {
+            equals: normalizedName,
+            mode: 'insensitive',
+          },
+        },
+        {
+          name: {
+            equals: decodedSlug,
+            mode: 'insensitive',
+          },
+        },
+      ],
     },
     include: {
       books: {

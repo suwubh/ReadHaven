@@ -265,11 +265,13 @@ export default function ProfilePageClient({ data, session }: Props) {
             <h2>My Shelves</h2>
             <div className="shelves-grid">
               {data.shelves.map((shelf) => {
-                const slug =
-                  shelfNameToSlug(shelf.name) ||
-                  shelfNameToLegacySlug(shelf.name) ||
-                  'untitled-shelf';
-                const displayName = shelf.name.trim() || 'Untitled Shelf';
+                const safeName = (shelf.name ?? '').trim();
+                const displayName = safeName || 'Untitled Shelf';
+                const slug = safeName
+                  ? shelfNameToSlug(safeName) ||
+                    shelfNameToLegacySlug(safeName) ||
+                    'untitled-shelf'
+                  : 'untitled-shelf';
 
                 return (
                 <Link

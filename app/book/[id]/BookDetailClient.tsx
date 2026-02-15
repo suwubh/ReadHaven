@@ -200,6 +200,7 @@ export default function BookDetailClient({
                         ) : (
                           userShelves.map((shelf) => (
                             <button
+                              type="button"
                               key={shelf.id}
                               onClick={() => handleAddToShelf(shelf.id)}
                               className="shelf-option"
