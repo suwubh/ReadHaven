@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -29,7 +29,30 @@ interface Props {
 
 export default function FeedSidebar({ posts, currentUserId }: Props) {
   const router = useRouter();
-  const [liking, setLiking] = useState<string | null>(null);
+  const [localPosts, setLocalPosts] = useState(posts);
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setLocalPosts(posts);
+  }, [posts]);
+
+  const setPostLikeState = (liked: boolean, postId: string, userId: string) => {
+    setLocalPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        const likesWithoutCurrentUser = post.likes.filter((like) => like.userId !== userId);
+        if (!liked) {
+          return { ...post, likes: likesWithoutCurrentUser };
+        }
+
+        return {
+          ...post,
+          likes: [...likesWithoutCurrentUser, { id: `optimistic-${userId}-${postId}`, userId }],
+        };
+      })
+    );
+  };
 
   const handleLike = async (postId: string) => {
     if (!currentUserId) {
@@ -37,7 +60,18 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
       return;
     }
 
-    setLiking(postId);
+    if (likingPosts.has(postId)) return;
+
+    const post = localPosts.find((item) => item.id === postId);
+    const wasLiked = post ? post.likes.some((like) => like.userId === currentUserId) : false;
+
+    setPostLikeState(!wasLiked, postId, currentUserId);
+    setLikingPosts((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      return next;
+    });
+
     try {
       const response = await fetch('/api/posts/like', {
         method: 'POST',
@@ -45,13 +79,21 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
         body: JSON.stringify({ postId }),
       });
 
-      if (response.ok) {
-        router.refresh();
+      if (!response.ok) {
+        throw new Error('Failed to toggle like');
       }
+
+      const data: { liked: boolean } = await response.json();
+      setPostLikeState(data.liked, postId, currentUserId);
     } catch (error) {
       console.error('Like error:', error);
+      setPostLikeState(wasLiked, postId, currentUserId);
     } finally {
-      setLiking(null);
+      setLikingPosts((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
     }
   };
 
@@ -79,7 +121,7 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
       </div>
 
       <div className="feed-posts">
-        {posts.length === 0 ? (
+        {localPosts.length === 0 ? (
           <div className="empty-feed">
             <p>No posts yet. Be the first to share!</p>
             {currentUserId && (
@@ -89,7 +131,7 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
             )}
           </div>
         ) : (
-          posts.slice(0, 3).map((post) => (
+          localPosts.slice(0, 3).map((post) => (
             <div key={post.id} className="feed-post-card">
               <div className="post-header">
                 <div className="post-user-info">
@@ -124,7 +166,7 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
               <div className="post-actions">
                 <button
                   onClick={() => handleLike(post.id)}
-                  disabled={liking === post.id}
+                  disabled={likingPosts.has(post.id)}
                   className={`action-btn ${isLiked(post) ? 'liked' : ''}`}
                 >
                   <i className={`${isLiked(post) ? 'fas' : 'far'} fa-heart`}></i>

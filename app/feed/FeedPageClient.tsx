@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -29,7 +29,30 @@ interface Props {
 
 export default function FeedPageClient({ posts, currentUserId }: Props) {
   const router = useRouter();
-  const [liking, setLiking] = useState<string | null>(null);
+  const [localPosts, setLocalPosts] = useState(posts);
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setLocalPosts(posts);
+  }, [posts]);
+
+  const setPostLikeState = (liked: boolean, postId: string, userId: string) => {
+    setLocalPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id !== postId) return post;
+
+        const likesWithoutCurrentUser = post.likes.filter((like) => like.userId !== userId);
+        if (!liked) {
+          return { ...post, likes: likesWithoutCurrentUser };
+        }
+
+        return {
+          ...post,
+          likes: [...likesWithoutCurrentUser, { id: `optimistic-${userId}-${postId}`, userId }],
+        };
+      })
+    );
+  };
 
   const handleLike = async (postId: string) => {
     if (!currentUserId) {
@@ -37,7 +60,18 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
       return;
     }
 
-    setLiking(postId);
+    if (likingPosts.has(postId)) return;
+
+    const post = localPosts.find((item) => item.id === postId);
+    const wasLiked = post ? post.likes.some((like) => like.userId === currentUserId) : false;
+
+    setPostLikeState(!wasLiked, postId, currentUserId);
+    setLikingPosts((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      return next;
+    });
+
     try {
       const response = await fetch('/api/posts/like', {
         method: 'POST',
@@ -45,13 +79,21 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
         body: JSON.stringify({ postId }),
       });
 
-      if (response.ok) {
-        router.refresh();
+      if (!response.ok) {
+        throw new Error('Failed to toggle like');
       }
+
+      const data: { liked: boolean } = await response.json();
+      setPostLikeState(data.liked, postId, currentUserId);
     } catch (error) {
       console.error('Like error:', error);
+      setPostLikeState(wasLiked, postId, currentUserId);
     } finally {
-      setLiking(null);
+      setLikingPosts((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
     }
   };
 
@@ -84,7 +126,7 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
       </div>
 
       <div className="feed-page-container">
-        {posts.length === 0 ? (
+        {localPosts.length === 0 ? (
           <div className="empty-feed-page">
             <i className="fas fa-book-open"></i>
             <h3>No posts yet</h3>
@@ -97,7 +139,7 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
           </div>
         ) : (
           <div className="feed-posts-list">
-            {posts.map((post) => (
+            {localPosts.map((post) => (
               <div key={post.id} className="feed-post-full">
                 <div className="post-header-full">
                   <div className="post-user-info-full">
@@ -133,7 +175,7 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
                 <div className="post-actions-full">
                   <button
                     onClick={() => handleLike(post.id)}
-                    disabled={liking === post.id}
+                    disabled={likingPosts.has(post.id)}
                     className={`action-btn-full ${isLiked(post) ? 'liked' : ''}`}
                   >
                     <i className={`${isLiked(post) ? 'fas' : 'far'} fa-heart`}></i>
