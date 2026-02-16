@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -31,10 +31,17 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
   const router = useRouter();
   const [localPosts, setLocalPosts] = useState(posts);
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+  const lastSyncedPostsRef = useRef(posts);
 
   useEffect(() => {
+    const postsChanged = posts !== lastSyncedPostsRef.current;
+    if (!postsChanged || likingPosts.size > 0) {
+      return;
+    }
+
     setLocalPosts(posts);
-  }, [posts]);
+    lastSyncedPostsRef.current = posts;
+  }, [posts, likingPosts]);
 
   const setPostLikeState = (liked: boolean, postId: string, userId: string) => {
     setLocalPosts((prevPosts) =>
