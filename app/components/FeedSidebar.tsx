@@ -41,7 +41,8 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
   const [localPosts, setLocalPosts] = useState(posts);
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
   const lastSyncedPostsRef = useRef(posts);
-  const createPostHref = currentUserId ? '/create-post' : '/login?notice=login-required';
+  const loginWithNoticeHref = '/login?notice=login-required';
+  const createPostHref = currentUserId ? '/create-post' : loginWithNoticeHref;
 
   useEffect(() => {
     const postsChanged = posts !== lastSyncedPostsRef.current;
@@ -73,7 +74,7 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
 
   const handleLike = async (postId: string) => {
     if (!currentUserId) {
-      router.push('/login');
+      router.push(loginWithNoticeHref);
       return;
     }
 

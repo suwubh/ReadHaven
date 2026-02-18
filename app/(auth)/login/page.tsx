@@ -2,14 +2,35 @@
 
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+const noticeMessages: Record<string, string> = {
+  'login-required': 'Please log in first to create a post.',
+};
+
+function LoginNotice() {
+  const searchParams = useSearchParams();
+  const noticeKey = searchParams.get('notice');
+
+  if (!noticeKey) return null;
+
+  const message = noticeMessages[noticeKey] ?? 'Please log in to continue.';
+
+  return (
+    <div
+      aria-live="polite"
+      className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      {message}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,6 +38,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,6 +49,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
+        rememberMe: rememberMe ? 'true' : 'false',
         redirect: false,
       });
 
@@ -51,7 +74,6 @@ export default function LoginPage() {
 
   const inputClasses =
     'w-full rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm text-[#3c2924] placeholder:text-[#9f8b78] transition focus:border-[#8b6f47] focus:outline-none focus:ring-4 focus:ring-[#cdbca6]/40';
-  const loginNotice = searchParams.get('notice') === 'login-required';
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -66,11 +88,9 @@ export default function LoginPage() {
             <p className="mt-2 text-sm text-[#6f5a4a]">Welcome back. Sign in to continue your reading journey.</p>
           </div>
 
-          {loginNotice && (
-            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Please log in first to create a post.
-            </div>
-          )}
+          <Suspense fallback={null}>
+            <LoginNotice />
+          </Suspense>
 
           {error && (
             <div
@@ -115,6 +135,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
+                  aria-label={`${showPassword ? 'Hide' : 'Show'} password`}
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-[#6f5a4a] transition hover:text-[#4e342e]"
                 >
@@ -127,6 +148,8 @@ export default function LoginPage() {
               <label className="flex items-center gap-2 text-[#6f5a4a]">
                 <input
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-[#cbb8a0] text-[#4e342e] focus:ring-[#8b6f47]"
                 />
                 <span>Remember me</span>

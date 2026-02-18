@@ -100,6 +100,7 @@ export default function SignUpPage() {
 
           {error && (
             <div
+              role="alert"
               aria-live="polite"
               className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             >
@@ -158,6 +159,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
+                  aria-label={`${showPassword ? 'Hide' : 'Show'} password`}
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-[#6f5a4a] transition hover:text-[#4e342e]"
                 >
@@ -184,6 +186,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
+                  aria-label={`${showConfirmPassword ? 'Hide' : 'Show'} confirm password`}
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-[#6f5a4a] transition hover:text-[#4e342e]"
                 >
