@@ -6,10 +6,10 @@ export default function SignInContainer() {
   return (
     <div className="sign-in-container">
       <h3>Discover & read more</h3>
-      <Link href="/signup">
-        <button className="amazon-button">Continue with Amazon</button>
+      <Link href="/api/auth/signin/github?callbackUrl=/">
+        <button className="github-button">Continue with GitHub</button>
       </Link>
-      <Link href="/login">
+      <Link href="/api/auth/signin/google?callbackUrl=/">
         <button className="google-button">Continue with Google</button>
       </Link>
       <Link href="/signup">

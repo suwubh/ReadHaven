@@ -72,6 +72,11 @@ export default function LoginPage() {
     await signIn('google', { callbackUrl: '/' });
   };
 
+  const handleGitHubSignIn = async () => {
+    setLoading(true);
+    await signIn('github', { callbackUrl: '/' });
+  };
+
   const inputClasses =
     'w-full rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm text-[#3c2924] placeholder:text-[#9f8b78] transition focus:border-[#8b6f47] focus:outline-none focus:ring-4 focus:ring-[#cdbca6]/40';
 
@@ -173,6 +178,20 @@ export default function LoginPage() {
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b6f47]">Or continue with</span>
             <div className="h-px flex-1 bg-[#e4d8ca]" />
           </div>
+
+          <button
+            onClick={handleGitHubSignIn}
+            disabled={loading}
+            className="mb-3 flex w-full items-center justify-center gap-3 rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm font-semibold text-[#4e342e] transition hover:bg-[#f6f1ea] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.41-4.04-1.41-.54-1.38-1.33-1.74-1.33-1.74-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.25 1.84 1.25 1.08 1.84 2.83 1.31 3.52 1 .1-.79.42-1.31.77-1.61-2.67-.31-5.47-1.36-5.47-6.03 0-1.34.47-2.44 1.24-3.3-.13-.31-.54-1.57.12-3.27 0 0 1.01-.33 3.3 1.26a11.4 11.4 0 0 1 6.01 0c2.28-1.59 3.29-1.26 3.29-1.26.66 1.7.25 2.96.12 3.27.77.86 1.24 1.96 1.24 3.3 0 4.69-2.8 5.71-5.49 6.01.43.38.82 1.1.82 2.23v3.3c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"
+              />
+            </svg>
+            Continue with GitHub
+          </button>
 
           <button
             onClick={handleGoogleSignIn}
