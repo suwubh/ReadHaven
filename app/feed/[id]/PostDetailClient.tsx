@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface CommentItem {
   id: string;
@@ -27,6 +28,7 @@ interface PostDetail {
     name: string | null;
     image: string | null;
   };
+  likes: { id: string; userId: string }[];
   likesCount: number;
   comments: CommentItem[];
 }
@@ -34,12 +36,50 @@ interface PostDetail {
 interface Props {
   post: PostDetail;
   currentUserId?: string;
+  likedByCurrentUser: boolean;
 }
 
 const loginWithNoticeHref = '/login?notice=login-required';
 
+const isString = (value: unknown): value is string => typeof value === 'string';
+
+const isNullableString = (value: unknown): value is string | null =>
+  value === null || typeof value === 'string';
+
+const isCommentItem = (value: unknown): value is CommentItem => {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const item = value as {
+    id?: unknown;
+    content?: unknown;
+    createdAt?: unknown;
+    user?: {
+      id?: unknown;
+      name?: unknown;
+      image?: unknown;
+    };
+  };
+
+  return (
+    isString(item.id) &&
+    isString(item.content) &&
+    isString(item.createdAt) &&
+    !!item.user &&
+    isString(item.user.id) &&
+    isNullableString(item.user.name) &&
+    isNullableString(item.user.image)
+  );
+};
+
+const normalizeImageUrl = (url: string) =>
+  url.startsWith('http://') ? url.replace('http://', 'https://') : url;
+
 const getTimeAgo = (dateValue: string) => {
-  const seconds = Math.floor((Date.now() - new Date(dateValue).getTime()) / 1000);
+  const timestamp = Date.parse(dateValue);
+  if (Number.isNaN(timestamp)) return 'unknown date';
+
+  const elapsedSeconds = Math.floor((Date.now() - timestamp) / 1000);
+  const seconds = Math.max(0, elapsedSeconds);
 
   if (seconds < 60) return 'just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
@@ -47,7 +87,7 @@ const getTimeAgo = (dateValue: string) => {
   return `${Math.floor(seconds / 86400)}d ago`;
 };
 
-export default function PostDetailClient({ post, currentUserId }: Props) {
+export default function PostDetailClient({ post, currentUserId, likedByCurrentUser }: Props) {
   const router = useRouter();
   const [comments, setComments] = useState<CommentItem[]>(post.comments);
   const [commentContent, setCommentContent] = useState('');
@@ -96,8 +136,13 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
         return;
       }
 
-      const createdComment = data as CommentItem;
-      setComments((prev) => [...prev, createdComment]);
+      if (!isCommentItem(data)) {
+        console.error('Invalid comment response shape:', data);
+        setCommentError('Failed to add comment.');
+        return;
+      }
+
+      setComments((prev) => [...prev, data]);
       setCommentContent('');
     } catch (error) {
       console.error('Create comment error:', error);
@@ -126,7 +171,12 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
             <div className="post-user-info-full">
               <div className="post-avatar-full">
                 {post.user.image ? (
-                  <img src={post.user.image} alt={post.user.name || 'User'} />
+                  <Image
+                    src={normalizeImageUrl(post.user.image)}
+                    alt={post.user.name || 'User'}
+                    width={45}
+                    height={45}
+                  />
                 ) : (
                   <div className="post-avatar-placeholder-full">
                     {post.user.name?.charAt(0).toUpperCase() || 'U'}
@@ -144,7 +194,12 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
             <p>{post.content}</p>
             {post.bookCover && (
               <div className="post-book-full">
-                <img src={post.bookCover} alt={post.bookTitle || 'Book'} />
+                <Image
+                  src={normalizeImageUrl(post.bookCover)}
+                  alt={post.bookTitle || 'Book'}
+                  width={80}
+                  height={120}
+                />
                 <div className="post-book-details">
                   <h4>{post.bookTitle}</h4>
                   {post.bookAuthors && <p>by {post.bookAuthors}</p>}
@@ -155,7 +210,7 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
 
           <div className="post-actions-full">
             <span className="action-btn-full">
-              <i className="far fa-heart"></i>
+              <i className={`${likedByCurrentUser ? 'fas' : 'far'} fa-heart`}></i>
               <span>{post.likesCount} {post.likesCount === 1 ? 'like' : 'likes'}</span>
             </span>
             <span className="action-btn-full">
@@ -178,19 +233,23 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
           )}
 
           <form onSubmit={handleCreateComment} className="comment-form">
+            <label htmlFor="comment-content-input" className="comment-input-label">
+              Write a comment
+            </label>
             <textarea
+              id="comment-content-input"
               value={commentContent}
               onChange={(e) => setCommentContent(e.target.value)}
               placeholder={currentUserId ? 'Write a comment...' : 'Log in to comment'}
               className="comment-input"
-              disabled={submittingComment}
+              disabled={submittingComment || !currentUserId}
               rows={3}
             />
             <div className="comment-form-footer">
               {commentError ? <p className="comment-error">{commentError}</p> : <span />}
               <button
                 type="submit"
-                disabled={submittingComment}
+                disabled={submittingComment || !currentUserId}
                 className="comment-submit-btn"
               >
                 {submittingComment ? 'Posting...' : 'Post Comment'}
@@ -208,7 +267,12 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
                     <div className="comment-user-row">
                       <div className="comment-avatar">
                         {comment.user.image ? (
-                          <img src={comment.user.image} alt={comment.user.name || 'User'} />
+                          <Image
+                            src={normalizeImageUrl(comment.user.image)}
+                            alt={comment.user.name || 'User'}
+                            width={36}
+                            height={36}
+                          />
                         ) : (
                           <div className="comment-avatar-placeholder">
                             {comment.user.name?.charAt(0).toUpperCase() || 'U'}
@@ -231,4 +295,3 @@ export default function PostDetailClient({ post, currentUserId }: Props) {
     </div>
   );
 }
-

@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+const MAX_COMMENT_LENGTH = 2000;
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
+
 interface RouteContext {
   params: Promise<{
     id: string;
@@ -15,6 +19,13 @@ export async function GET(
 ) {
   try {
     const { id: postId } = await params;
+    const { searchParams } = new URL(request.url);
+    const limitParam = Number.parseInt(searchParams.get('limit') ?? '', 10);
+    const cursor = searchParams.get('cursor');
+
+    const take = Number.isNaN(limitParam)
+      ? DEFAULT_PAGE_SIZE
+      : Math.min(Math.max(limitParam, 1), MAX_PAGE_SIZE);
 
     const comments = await prisma.comment.findMany({
       where: { postId },
@@ -27,12 +38,22 @@ export async function GET(
           },
         },
       },
-      orderBy: {
-        createdAt: 'asc',
-      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      take: take + 1,
     });
 
-    return NextResponse.json(comments);
+    const hasMore = comments.length > take;
+    const paginatedComments = hasMore ? comments.slice(0, take) : comments;
+    const nextCursor = hasMore
+      ? paginatedComments[paginatedComments.length - 1]?.id ?? null
+      : null;
+
+    return NextResponse.json({
+      comments: paginatedComments,
+      hasMore,
+      nextCursor,
+    });
   } catch (error) {
     console.error('Fetch comments error:', error);
     return NextResponse.json(
@@ -61,6 +82,13 @@ export async function POST(
     if (!content) {
       return NextResponse.json(
         { error: 'Comment content is required' },
+        { status: 400 }
+      );
+    }
+
+    if (content.length > MAX_COMMENT_LENGTH) {
+      return NextResponse.json(
+        { error: `Comment content exceeds maximum length of ${MAX_COMMENT_LENGTH} characters` },
         { status: 400 }
       );
     }
@@ -100,4 +128,3 @@ export async function POST(
     );
   }
 }
-

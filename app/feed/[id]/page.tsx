@@ -54,6 +54,7 @@ async function getPostWithComments(postId: string) {
     bookAuthors: post.bookAuthors,
     createdAt: post.createdAt.toISOString(),
     user: post.user,
+    likes: post.likes,
     likesCount: post.likes.length,
     comments: post.comments.map((comment) => ({
       id: comment.id,
@@ -66,18 +67,24 @@ async function getPostWithComments(postId: string) {
 
 export default async function FeedPostPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  const post = await getPostWithComments(id);
+  const [session, post] = await Promise.all([
+    getServerSession(authOptions),
+    getPostWithComments(id),
+  ]);
 
   if (!post) {
     notFound();
   }
 
+  const likedByCurrentUser = session?.user?.id
+    ? post.likes.some((like) => like.userId === session.user.id)
+    : false;
+
   return (
     <PostDetailClient
       post={post}
       currentUserId={session?.user?.id}
+      likedByCurrentUser={likedByCurrentUser}
     />
   );
 }
-
