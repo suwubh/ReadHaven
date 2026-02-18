@@ -377,7 +377,9 @@ main {
   margin-bottom: 15px;
 }
 
-.sign-in-container button {
+.sign-in-container .github-button,
+.sign-in-container .google-button,
+.sign-in-container .email-button {
   display: block;
   width: 100%;
   padding: 10px;
@@ -387,13 +389,17 @@ main {
   font-size: 1rem;
   cursor: pointer;
   transition: opacity 0.3s ease;
+  text-decoration: none;
 }
 
-.sign-in-container button:hover {
+.sign-in-container .github-button:hover,
+.sign-in-container .google-button:hover,
+.sign-in-container .email-button:hover {
   opacity: 0.9;
+  text-decoration: none;
 }
 
-.amazon-button {
+.github-button {
   background-color: #ff9900;
   color: white;
 }
@@ -408,12 +414,12 @@ main {
   color: white;
 }
 
-.sign-in-container a {
+.sign-in-container p a {
   color: #0077cc;
   text-decoration: none;
 }
 
-.sign-in-container a:hover {
+.sign-in-container p a:hover {
   text-decoration: underline;
 }
 

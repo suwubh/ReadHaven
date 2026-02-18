@@ -6,14 +6,14 @@ export default function SignInContainer() {
   return (
     <div className="sign-in-container">
       <h3>Discover & read more</h3>
-      <Link href="/api/auth/signin/github?callbackUrl=/">
-        <button className="github-button">Continue with GitHub</button>
+      <Link href="/api/auth/signin/github?callbackUrl=/" className="github-button">
+        Continue with GitHub
       </Link>
-      <Link href="/api/auth/signin/google?callbackUrl=/">
-        <button className="google-button">Continue with Google</button>
+      <Link href="/api/auth/signin/google?callbackUrl=/" className="google-button">
+        Continue with Google
       </Link>
-      <Link href="/signup">
-        <button className="email-button">Sign up with email</button>
+      <Link href="/signup" className="email-button">
+        Sign up with email
       </Link>
       <p>
         By creating an account, you agree to the ReadHaven{' '}

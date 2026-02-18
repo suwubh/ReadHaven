@@ -68,13 +68,29 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    setError('');
     setLoading(true);
-    await signIn('google', { callbackUrl: '/' });
+    try {
+      await signIn('google', { callbackUrl: '/' });
+    } catch (oauthError) {
+      console.error('Google sign-in error:', oauthError);
+      setError('Unable to start Google sign in. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGitHubSignIn = async () => {
+    setError('');
     setLoading(true);
-    await signIn('github', { callbackUrl: '/' });
+    try {
+      await signIn('github', { callbackUrl: '/' });
+    } catch (oauthError) {
+      console.error('GitHub sign-in error:', oauthError);
+      setError('Unable to start GitHub sign in. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClasses =
