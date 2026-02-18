@@ -9,7 +9,7 @@ export default async function CreatePostPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    redirect('/login');
+    redirect('/login?notice=login-required');
   }
 
   return <CreatePostClient user={session.user} />;

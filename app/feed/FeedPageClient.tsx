@@ -32,6 +32,7 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
   const [localPosts, setLocalPosts] = useState(posts);
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
   const lastSyncedPostsRef = useRef(posts);
+  const createPostHref = currentUserId ? '/create-post' : '/login?notice=login-required';
 
   useEffect(() => {
     const postsChanged = posts !== lastSyncedPostsRef.current;
@@ -124,12 +125,10 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
           ← Back to Home
         </Link>
         <h1>Book Feed</h1>
-        {currentUserId && (
-          <Link href="/create-post" className="create-post-header-btn">
-            <i className="fas fa-plus"></i>
-            Create Post
-          </Link>
-        )}
+        <Link href={createPostHref} className="create-post-header-btn">
+          <i className="fas fa-plus"></i>
+          Create Post
+        </Link>
       </div>
 
       <div className="feed-page-container">
@@ -138,11 +137,9 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
             <i className="fas fa-book-open"></i>
             <h3>No posts yet</h3>
             <p>Be the first to share your thoughts about a book!</p>
-            {currentUserId && (
-              <Link href="/create-post" className="create-first-post-btn">
-                Create First Post
-              </Link>
-            )}
+            <Link href={createPostHref} className="create-first-post-btn">
+              Create First Post
+            </Link>
           </div>
         ) : (
           <div className="feed-posts-list">

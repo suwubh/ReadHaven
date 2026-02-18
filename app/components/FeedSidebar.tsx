@@ -41,6 +41,7 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
   const [localPosts, setLocalPosts] = useState(posts);
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
   const lastSyncedPostsRef = useRef(posts);
+  const createPostHref = currentUserId ? '/create-post' : '/login?notice=login-required';
 
   useEffect(() => {
     const postsChanged = posts !== lastSyncedPostsRef.current;
@@ -153,11 +154,9 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
         {localPosts.length === 0 ? (
           <div className="empty-feed">
             <p>No posts yet. Be the first to share!</p>
-            {currentUserId && (
-              <Link href="/create-post" className="create-post-btn-small">
-                Create Post
-              </Link>
-            )}
+            <Link href={createPostHref} className="create-post-btn-small">
+              Create Post
+            </Link>
           </div>
         ) : (
           localPosts.slice(0, 3).map((post) => (
@@ -211,12 +210,10 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
         )}
       </div>
 
-      {currentUserId && (
-        <Link href="/create-post" className="create-post-btn">
-          <i className="fas fa-plus"></i>
-          Create Post
-        </Link>
-      )}
+      <Link href={createPostHref} className="create-post-btn">
+        <i className="fas fa-plus"></i>
+        Create Post
+      </Link>
     </div>
   );
 }

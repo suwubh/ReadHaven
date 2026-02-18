@@ -4,11 +4,12 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -50,6 +51,7 @@ export default function LoginPage() {
 
   const inputClasses =
     'w-full rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm text-[#3c2924] placeholder:text-[#9f8b78] transition focus:border-[#8b6f47] focus:outline-none focus:ring-4 focus:ring-[#cdbca6]/40';
+  const loginNotice = searchParams.get('notice') === 'login-required';
 
   return (
     <div className="mx-auto w-full max-w-md">
@@ -63,6 +65,12 @@ export default function LoginPage() {
             </Link>
             <p className="mt-2 text-sm text-[#6f5a4a]">Welcome back. Sign in to continue your reading journey.</p>
           </div>
+
+          {loginNotice && (
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Please log in first to create a post.
+            </div>
+          )}
 
           {error && (
             <div
