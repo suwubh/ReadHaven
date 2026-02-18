@@ -191,10 +191,6 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
                     <span>{post.comments.length} {post.comments.length === 1 ? 'comment' : 'comments'}</span>
                   </Link>
                 </div>
-
-                <Link href={`/feed/${post.id}`} className="view-comments-link">
-                  View all comments
-                </Link>
               </div>
             ))}
           </div>
