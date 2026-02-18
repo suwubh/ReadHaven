@@ -17,8 +17,10 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
@@ -55,7 +57,6 @@ export default function SignUpPage() {
         return;
       }
 
-      // Auto sign in after registration
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
@@ -70,7 +71,7 @@ export default function SignUpPage() {
 
       router.push('/');
       router.refresh();
-    } catch (error) {
+    } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
     }
@@ -81,144 +82,176 @@ export default function SignUpPage() {
     await signIn('google', { callbackUrl: '/' });
   };
 
+  const inputClasses =
+    'w-full rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm text-[#3c2924] placeholder:text-[#9f8b78] transition focus:border-[#8b6f47] focus:outline-none focus:ring-4 focus:ring-[#cdbca6]/40';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100 px-4 py-12">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-amber-900 mb-2">ReadHaven</h1>
-          <p className="text-gray-600">Create your account and start reading</p>
-        </div>
+    <div className="mx-auto w-full max-w-lg">
+      <div className="overflow-hidden rounded-3xl border border-[#eadfce] bg-white/95 shadow-[0_24px_64px_-34px_rgba(78,52,46,0.55)] backdrop-blur-sm">
+        <div className="h-1.5 bg-gradient-to-r from-[#4e342e] via-[#8b6f47] to-[#b9a78f]" />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
-              placeholder="John Doe"
-            />
+        <section className="px-6 py-8 sm:px-8 sm:py-10">
+          <div className="mb-7 text-center">
+            <Link href="/" className="inline-flex text-3xl font-black tracking-tight text-[#4e342e]">
+              ReadHaven
+            </Link>
+            <p className="mt-2 text-sm text-[#6f5a4a]">Create your account and start tracking your reads.</p>
           </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
-              placeholder="At least 6 characters"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
-              placeholder="Re-enter password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+          {error && (
+            <div
+              aria-live="polite"
+              className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {error}
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-semibold text-[#4e342e]">
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={inputClasses}
+                placeholder="John Doe"
+              />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-[#4e342e]">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className={inputClasses}
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-[#4e342e]">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className={`${inputClasses} pr-16`}
+                  placeholder="At least 6 characters"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-[#6f5a4a] transition hover:text-[#4e342e]"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-[#4e342e]">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className={`${inputClasses} pr-16`}
+                  placeholder="Re-enter password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-[#6f5a4a] transition hover:text-[#4e342e]"
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-[#4e342e] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_-16px_rgba(78,52,46,0.75)] transition hover:bg-[#3d2924] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#e4d8ca]" />
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b6f47]">Or continue with</span>
+            <div className="h-px flex-1 bg-[#e4d8ca]" />
           </div>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="mt-6 w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-[#d9cec3] bg-[#fffdf9] px-4 py-3 text-sm font-semibold text-[#4e342e] transition hover:bg-[#f6f1ea] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
               <path
-                fill="currentColor"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+                d="M21.35 11.1H12v2.96h5.35c-.24 1.5-1.93 4.4-5.35 4.4-3.22 0-5.85-2.67-5.85-5.96s2.63-5.96 5.85-5.96c1.83 0 3.05.78 3.75 1.45l2.56-2.48C16.67 3.98 14.58 3 12 3 6.92 3 2.8 7.16 2.8 12.5S6.92 22 12 22c6.92 0 9.35-4.86 9.35-7.37 0-.5-.05-.9-.12-1.3Z"
               />
               <path
-                fill="currentColor"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+                d="M3.8 7.84 6.24 9.6a5.99 5.99 0 0 1 0 5.8L3.8 17.16A9.53 9.53 0 0 1 2.8 12.5c0-1.67.38-3.25 1-4.66Z"
               />
               <path
-                fill="currentColor"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+                d="M12 22c2.58 0 4.76-.85 6.34-2.32l-2.9-2.4c-.78.56-1.8.94-3.44.94-2.67 0-4.93-1.82-5.74-4.27L3.8 15.7C5.37 19.42 8.43 22 12 22Z"
               />
               <path
-                fill="currentColor"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+                d="M18.34 19.68 15.44 17.3c1.26-.88 2.08-2.22 2.38-3.74H12V11.1h9.35c.1.55.15 1.08.15 1.72 0 2.5-.9 4.9-3.16 6.86Z"
               />
             </svg>
             Continue with Google
           </button>
-        </div>
 
-        <p className="mt-6 text-center text-xs text-gray-500">
-          By creating an account, you agree to ReadHaven's{' '}
-          <Link href="/terms" className="text-amber-600 hover:text-amber-700">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-amber-600 hover:text-amber-700">
-            Privacy Policy
-          </Link>
-        </p>
+          <p className="mt-6 text-center text-xs text-[#6f5a4a]">
+            By creating an account, you agree to ReadHaven&apos;s{' '}
+            <Link href="/terms" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
+              Privacy Policy
+            </Link>
+            .
+          </p>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link href="/login" className="text-amber-600 font-semibold hover:text-amber-700">
-            Sign in
-          </Link>
-        </p>
+          <p className="mt-4 text-center text-sm text-[#6f5a4a]">
+            Already have an account?{' '}
+            <Link href="/login" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
+              Sign in
+            </Link>
+          </p>
+        </section>
       </div>
     </div>
   );
