@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface BookItem {
   image: string;
@@ -26,14 +27,16 @@ function BookSeries({ userName, books, likedBook, themes }: BookSeriesProps) {
         {/* Books row */}
         {books.map((book) => (
           <Link
-            key={book.title}
+            key={`${book.title}-${book.author}`}
             href={buildBookResolveHref(book.title, book.author)}
             aria-label={`${book.title} by ${book.author}`}
           >
-            <img 
+            <Image
               src={book.image}
               alt={`${book.title} by ${book.author}`}
               className="book-image"
+              width={100}
+              height={150}
             />
           </Link>
         ))}

@@ -41,14 +41,17 @@ async function resolveBookId(title: string, author: string) {
   const normalizedTitle = normalize(title);
   const normalizedAuthor = normalize(author);
 
-  const bestMatch =
-    books.find(
-      (book) =>
-        normalize(book.title).includes(normalizedTitle) &&
-        book.authors.some((bookAuthor) => normalize(bookAuthor).includes(normalizedAuthor))
-    ) ?? books[0];
+  const bestMatch = books.find(
+    (book) =>
+      normalize(book.title).includes(normalizedTitle) &&
+      book.authors.some((bookAuthor) => normalize(bookAuthor).includes(normalizedAuthor))
+  );
 
-  return bestMatch?.id ?? null;
+  if (!bestMatch) {
+    return null;
+  }
+
+  return bestMatch.id;
 }
 
 export default async function ResolveBookPage({ searchParams }: ResolvePageProps) {
