@@ -1,9 +1,20 @@
+import Link from 'next/link';
+
+interface BookItem {
+  image: string;
+  title: string;
+  author: string;
+}
+
 interface BookSeriesProps {
   userName: string;
-  books: string[];
-  likedBook: string;
+  books: BookItem[];
+  likedBook: BookItem;
   themes: string[];
 }
+
+const buildBookResolveHref = (title: string, author: string) =>
+  `/book/resolve?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`;
 
 function BookSeries({ userName, books, likedBook, themes }: BookSeriesProps) {
   return (
@@ -13,13 +24,18 @@ function BookSeries({ userName, books, likedBook, themes }: BookSeriesProps) {
       
       <div className="book-flow">
         {/* Books row */}
-        {books.map((book, index) => (
-          <img 
-            key={index}
-            src={book}
-            alt={`Book ${index + 1}`}
-            className="book-image"
-          />
+        {books.map((book) => (
+          <Link
+            key={book.title}
+            href={buildBookResolveHref(book.title, book.author)}
+            aria-label={`${book.title} by ${book.author}`}
+          >
+            <img 
+              src={book.image}
+              alt={`${book.title} by ${book.author}`}
+              className="book-image"
+            />
+          </Link>
         ))}
 
         {/* Arrow */}
@@ -36,11 +52,16 @@ function BookSeries({ userName, books, likedBook, themes }: BookSeriesProps) {
 
         {/* Liked book */}
         <div className="liked-book">
-          <img 
-            src={likedBook}
-            alt={`${userName} liked this book`}
-            className="book-image liked"
-          />
+          <Link
+            href={buildBookResolveHref(likedBook.title, likedBook.author)}
+            aria-label={`${likedBook.title} by ${likedBook.author}`}
+          >
+            <img 
+              src={likedBook.image}
+              alt={`${likedBook.title} by ${likedBook.author}`}
+              className="book-image liked"
+            />
+          </Link>
         </div>
 
         {/* Passage text */}
@@ -61,26 +82,46 @@ export default function DiscoverSection() {
   const shagunData = {
     userName: 'Shagun',
     books: [
-      '/images/book1.jpeg',
-      '/images/book2.jpeg',
-      '/images/book3.jpeg',
-      '/images/book4.jpeg',
-      '/images/book9.jpeg',
+      { image: '/images/book1.jpeg', title: 'Anna Karenina', author: 'Leo Tolstoy' },
+      { image: '/images/book2.jpeg', title: 'Madame Bovary', author: 'Gustave Flaubert' },
+      { image: '/images/book3.jpeg', title: 'War and Peace', author: 'Leo Tolstoy' },
+      { image: '/images/book4.jpeg', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
+      { image: '/images/book9.jpeg', title: 'To Kill a Mockingbird', author: 'Harper Lee' },
     ],
-    likedBook: '/images/liked-book1.jpeg',
+    likedBook: {
+      image: '/images/liked-book1.jpeg',
+      title: 'To the Lighthouse',
+      author: 'Virginia Woolf',
+    },
     themes: ['The passage of time', 'The nature of art', 'The female experience'],
   };
 
   const dristiiiData = {
     userName: 'Dristiii',
     books: [
-      '/images/book5.jpeg',
-      '/images/book6.jpeg',
-      '/images/book7.jpeg',
-      '/images/book8.jpeg',
-      '/images/book10.jpeg',
+      {
+        image: '/images/book5.jpeg',
+        title: 'The Adventures of Huckleberry Finn',
+        author: 'Mark Twain',
+      },
+      { image: '/images/book6.jpeg', title: 'Swann\'s Way', author: 'Marcel Proust' },
+      { image: '/images/book7.jpeg', title: 'Hamlet', author: 'William Shakespeare' },
+      {
+        image: '/images/book8.jpeg',
+        title: 'Crime and Punishment',
+        author: 'Fyodor Dostoevsky',
+      },
+      {
+        image: '/images/book10.jpeg',
+        title: 'The Canterbury Tales',
+        author: 'Geoffrey Chaucer',
+      },
     ],
-    likedBook: '/images/liked-book2.jpeg',
+    likedBook: {
+      image: '/images/liked-book2.jpeg',
+      title: 'Pride and Prejudice',
+      author: 'Jane Austen',
+    },
     themes: ['Manners', 'Upbringing', 'Morality', 'Education'],
   };
 
