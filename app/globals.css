@@ -100,6 +100,15 @@ main {
   text-align: center;
 }
 
+.hero-fade-text {
+  opacity: 0;
+  transition: opacity 2s ease-in;
+}
+
+.hero-fade-text-visible {
+  opacity: 1;
+}
+
 .hidden {
   opacity: 0;
   transition: opacity 2s ease-in;

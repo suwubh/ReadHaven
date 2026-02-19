@@ -48,7 +48,7 @@ export default function HeroSection() {
         <h1 className="hero-title">
           <span>{typewriterText}</span>
           <br />
-          <span className={`${showSlowText ? 'show' : 'hidden'}`}>
+          <span className={`hero-fade-text ${showSlowText ? 'hero-fade-text-visible' : ''}`}>
             favorite book
           </span>
         </h1>
