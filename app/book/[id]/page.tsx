@@ -50,12 +50,33 @@ async function getUserBookData(userId: string | undefined, bookId: string) {
   return { shelves, review };
 }
 
+async function getBookReviews(bookId: string) {
+  return prisma.review.findMany({
+    where: { bookId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
 export default async function BookDetailPage({ params }: PageProps) {
   const { id } = await params;
 
   const session = await getServerSession(authOptions);
-  const book = await getBookData(id);
-  const userData = await getUserBookData(session?.user?.id, id);
+  const [book, userData, bookReviews] = await Promise.all([
+    getBookData(id),
+    getUserBookData(session?.user?.id, id),
+    getBookReviews(id),
+  ]);
 
   return (
     <BookDetailClient
@@ -63,6 +84,7 @@ export default async function BookDetailPage({ params }: PageProps) {
       session={session}
       userShelves={userData?.shelves ?? []}
       userReview={userData?.review ?? null}
+      bookReviews={bookReviews}
     />
   );
 }

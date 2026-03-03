@@ -35,11 +35,24 @@ interface Review {
   content: string | null;
 }
 
+interface BookReview {
+  id: string;
+  rating: number;
+  content: string | null;
+  createdAt: Date | string;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+}
+
 interface Props {
   book: Book;
   session: Session | null;
   userShelves: Shelf[];
   userReview: Review | null;
+  bookReviews: BookReview[];
 }
 
 export default function BookDetailClient({
@@ -47,9 +60,9 @@ export default function BookDetailClient({
   session,
   userShelves,
   userReview: initialReview,
+  bookReviews,
 }: Props) {
   const router = useRouter();
-  const [selectedShelf, setSelectedShelf] = useState('');
   const [showShelfDropdown, setShowShelfDropdown] = useState(false);
   const [rating, setRating] = useState(initialReview?.rating || 0);
   const [reviewText, setReviewText] = useState(initialReview?.content || '');
@@ -266,6 +279,54 @@ export default function BookDetailClient({
                 </div>
               </form>
             )}
+
+            <section className="book-reviews-section">
+              <h3>
+                Reviews
+                <span className="book-reviews-count">({bookReviews.length})</span>
+              </h3>
+
+              {bookReviews.length === 0 ? (
+                <p className="book-reviews-empty">
+                  No reviews yet. Be the first to share one.
+                </p>
+              ) : (
+                <div className="book-reviews-list">
+                  {bookReviews.map((review) => {
+                    const reviewAuthor =
+                      session?.user?.id === review.user.id
+                        ? 'You'
+                        : review.user.name || 'Anonymous Reader';
+
+                    return (
+                      <article key={review.id} className="book-review-item">
+                        <div className="book-review-header">
+                          <span className="book-review-author">{reviewAuthor}</span>
+                          <span className="book-review-date">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        <div className="book-review-stars">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <i
+                              key={star}
+                              className={`fas fa-star ${
+                                star <= review.rating ? 'filled' : ''
+                              }`}
+                            ></i>
+                          ))}
+                        </div>
+
+                        {review.content && (
+                          <p className="book-review-content">{review.content}</p>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </div>
         </div>
 
