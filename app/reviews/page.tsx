@@ -24,5 +24,5 @@ export default async function ReviewsPage() {
 
   const reviews = await getUserReviews(session.user.id);
 
-  return <ReviewsPageClient reviews={reviews} user={session.user} />;
+  return <ReviewsPageClient reviews={reviews} />;
 }

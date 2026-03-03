@@ -7,9 +7,12 @@ import GitHubProvider from 'next-auth/providers/github';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
+import { normalizeEmail } from './validation';
 
 const githubClientId = process.env.GITHUB_CLIENT_ID;
 const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 const githubProviders =
   githubClientId && githubClientSecret
@@ -21,14 +24,21 @@ const githubProviders =
       ]
     : [];
 
+const googleProviders =
+  googleClientId && googleClientSecret
+    ? [
+        GoogleProvider({
+          clientId: googleClientId,
+          clientSecret: googleClientSecret,
+        }),
+      ]
+    : [];
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     ...githubProviders,
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
+    ...googleProviders,
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -40,9 +50,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        const user = await prisma.user.findUnique({
+        const normalizedEmail = normalizeEmail(credentials.email);
+        const user = await prisma.user.findFirst({
           where: {
-            email: credentials.email,
+            email: {
+              equals: normalizedEmail,
+              mode: 'insensitive',
+            },
           },
         });
 

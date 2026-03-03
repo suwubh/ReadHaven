@@ -1,6 +1,35 @@
 // app/api/books/search/route.ts
 
 import { NextResponse } from 'next/server';
+import { parseBoundedInt } from '@/lib/validation';
+
+interface OpenLibrarySearchResult {
+  key?: string;
+  title?: string;
+  author_name?: string[];
+  first_publish_year?: number;
+  cover_i?: number;
+  isbn?: string[];
+  ratings_average?: number;
+  ratings_count?: number;
+  subject?: string[];
+}
+
+interface GoogleBookVolumeResult {
+  id?: string;
+  volumeInfo?: {
+    title?: string;
+    authors?: string[];
+    publishedDate?: string;
+    imageLinks?: {
+      thumbnail?: string;
+    };
+    averageRating?: number;
+    ratingsCount?: number;
+    categories?: string[];
+    industryIdentifiers?: { identifier?: string }[];
+  };
+}
 
 async function searchOpenLibrary(query: string, offset: number, limit: number) {
   const response = await fetch(
@@ -12,7 +41,11 @@ async function searchOpenLibrary(query: string, offset: number, limit: number) {
   if (!response.ok) return null;
   
   const data = await response.json();
-  return data.docs?.map((item: any) => ({
+  const docs: OpenLibrarySearchResult[] = Array.isArray(data?.docs)
+    ? data.docs
+    : [];
+
+  return docs.map((item) => ({
     id: item.key?.replace('/works/', '') || `ol-${Date.now()}`,
     title: item.title || 'Unknown Title',
     authors: item.author_name || ['Unknown Author'],
@@ -25,7 +58,7 @@ async function searchOpenLibrary(query: string, offset: number, limit: number) {
     categories: item.subject?.slice(0, 3) || [],
     isbn: item.isbn?.[0] || '',
     source: 'openlibrary',
-  })) || [];
+  }));
 }
 
 async function searchGoogleBooks(query: string, startIndex: number, maxResults: number) {
@@ -38,7 +71,11 @@ async function searchGoogleBooks(query: string, startIndex: number, maxResults: 
   if (!response.ok) return null;
 
   const data = await response.json();
-  return data.items?.map((item: any) => ({
+  const items: GoogleBookVolumeResult[] = Array.isArray(data?.items)
+    ? data.items
+    : [];
+
+  return items.map((item) => ({
     id: item.id,
     title: item.volumeInfo?.title || 'Unknown Title',
     authors: item.volumeInfo?.authors || ['Unknown Author'],
@@ -49,14 +86,18 @@ async function searchGoogleBooks(query: string, startIndex: number, maxResults: 
     categories: item.volumeInfo?.categories || [],
     isbn: item.volumeInfo?.industryIdentifiers?.[0]?.identifier || '',
     source: 'google',
-  })) || [];
+  }));
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q');
-    const page = parseInt(searchParams.get('page') || '1');
+    const query = searchParams.get('q')?.trim();
+    const page = parseBoundedInt(searchParams.get('page'), {
+      defaultValue: 1,
+      min: 1,
+      max: 1000,
+    });
     const limit = 20;
     const offset = (page - 1) * limit;
 

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { parsePagination } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
@@ -79,7 +80,13 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const bookId = searchParams.get('bookId');
+    const rawBookId = searchParams.get('bookId');
+    const bookId = rawBookId?.trim();
+    const { skip, take } = parsePagination(searchParams, {
+      defaultPage: 1,
+      defaultPageSize: 20,
+      maxPageSize: 50,
+    });
 
     if (!bookId) {
       return NextResponse.json(
@@ -104,6 +111,8 @@ export async function GET(request: Request) {
       orderBy: {
         createdAt: 'desc',
       },
+      skip,
+      take,
     });
 
     return NextResponse.json(reviews);

@@ -1,13 +1,18 @@
 // app/api/auth/register/route.ts
 
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { normalizeEmail } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password } = body;
+    const name = typeof body?.name === 'string' ? body.name.trim() : '';
+    const emailInput = typeof body?.email === 'string' ? body.email : '';
+    const email = normalizeEmail(emailInput);
+    const password = typeof body?.password === 'string' ? body.password : '';
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -16,11 +21,22 @@ export async function POST(request: Request) {
       );
     }
 
+    if (password.length < 8 || password.length > 72) {
+      return NextResponse.json(
+        { error: 'Password must be 8-72 characters long' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: {
-        email,
+        email: {
+          equals: email,
+          mode: 'insensitive',
+        },
       },
+      select: { id: true },
     });
 
     if (existingUser) {
@@ -33,34 +49,37 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-    });
+    const user = await prisma.$transaction(async (tx) => {
+      // Create user and bootstrap default shelves atomically.
+      const createdUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+        },
+      });
 
-    // Create default shelves for the user
-    await prisma.shelf.createMany({
-      data: [
-        {
-          name: 'Want to Read',
-          userId: user.id,
-          isDefault: true,
-        },
-        {
-          name: 'Currently Reading',
-          userId: user.id,
-          isDefault: true,
-        },
-        {
-          name: 'Read',
-          userId: user.id,
-          isDefault: true,
-        },
-      ],
+      await tx.shelf.createMany({
+        data: [
+          {
+            name: 'Want to Read',
+            userId: createdUser.id,
+            isDefault: true,
+          },
+          {
+            name: 'Currently Reading',
+            userId: createdUser.id,
+            isDefault: true,
+          },
+          {
+            name: 'Read',
+            userId: createdUser.id,
+            isDefault: true,
+          },
+        ],
+      });
+
+      return createdUser;
     });
 
     return NextResponse.json(
@@ -74,6 +93,16 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 400 }
+      );
+    }
+
     console.error('Registration error:', error);
     return NextResponse.json(
       { error: 'Something went wrong' },

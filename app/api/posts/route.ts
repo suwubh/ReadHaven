@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { parseBoundedInt } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +60,11 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseBoundedInt(searchParams.get('limit'), {
+      defaultValue: 10,
+      min: 1,
+      max: 50,
+    });
 
     const posts = await prisma.post.findMany({
       include: {

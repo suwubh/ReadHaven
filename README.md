@@ -1,6 +1,6 @@
 # ReadHaven
 
-A modern, full-stack reading management and social platform built with Next.js 14, where book lovers can discover, track, and share their reading journey.
+A modern, full-stack reading management and social platform built with Next.js 16, where book lovers can discover, track, and share their reading journey.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)

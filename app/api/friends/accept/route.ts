@@ -2,8 +2,14 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { validateWithSchema } from '@/lib/validation';
+
+const friendAcceptBodySchema = z.object({
+  friendshipId: z.string().trim().min(1, 'Friendship ID is required'),
+});
 
 export async function POST(request: Request) {
   try {
@@ -16,15 +22,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { friendshipId } = body;
-
-    if (!friendshipId) {
+    const bodyValidation = validateWithSchema(
+      friendAcceptBodySchema,
+      await request.json()
+    );
+    if (!bodyValidation.success) {
       return NextResponse.json(
-        { error: 'Friendship ID is required' },
+        { error: bodyValidation.error },
         { status: 400 }
       );
     }
+
+    const { friendshipId } = bodyValidation.data;
 
     // Verify the friendship exists and is pending
     const friendship = await prisma.friendship.findUnique({
@@ -35,6 +44,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Friendship not found or unauthorized' },
         { status: 404 }
+      );
+    }
+
+    if (friendship.status !== 'pending') {
+      return NextResponse.json(
+        { error: 'Friend request is no longer pending' },
+        { status: 400 }
       );
     }
 

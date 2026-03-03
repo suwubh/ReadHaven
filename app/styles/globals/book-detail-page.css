@@ -430,6 +430,7 @@
   font-size: 1.1rem;
   line-height: 1.8;
   color: #444;
+  white-space: pre-line;
 }
 
 .book-description-full p {

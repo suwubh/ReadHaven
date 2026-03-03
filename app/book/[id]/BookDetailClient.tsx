@@ -402,10 +402,9 @@ export default function BookDetailClient({
 
       <div className="book-description-section">
         <h2>About this book</h2>
-        <div
-          className="book-description-full"
-          dangerouslySetInnerHTML={{ __html: book.description }}
-        />
+        <p className="book-description-full">
+          {book.description || 'No description available.'}
+        </p>
       </div>
     </div>
   );

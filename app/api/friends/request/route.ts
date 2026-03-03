@@ -2,8 +2,14 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { validateWithSchema } from '@/lib/validation';
+
+const friendRequestBodySchema = z.object({
+  friendId: z.string().trim().min(1, 'Friend ID is required'),
+});
 
 export async function POST(request: Request) {
   try {
@@ -16,12 +22,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { friendId } = body;
-
-    if (!friendId) {
+    const bodyValidation = validateWithSchema(
+      friendRequestBodySchema,
+      await request.json()
+    );
+    if (!bodyValidation.success) {
       return NextResponse.json(
-        { error: 'Friend ID is required' },
+        { error: bodyValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const { friendId } = bodyValidation.data;
+
+    if (friendId === session.user.id) {
+      return NextResponse.json(
+        { error: 'Cannot add yourself as friend' },
         { status: 400 }
       );
     }

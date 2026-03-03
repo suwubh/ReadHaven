@@ -2,8 +2,41 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { validateWithSchema } from '@/lib/validation';
+
+const CURRENT_YEAR = new Date().getFullYear();
+
+function parseIntegerInput(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return value;
+    const parsed = Number.parseInt(trimmed, 10);
+    return Number.isNaN(parsed) ? value : parsed;
+  }
+
+  return value;
+}
+
+const readingGoalBodySchema = z.object({
+  year: z.preprocess(parseIntegerInput, z.number().int().min(1900).max(3000)),
+  target: z.preprocess(parseIntegerInput, z.number().int().min(1).max(1000)),
+});
+
+const readingGoalQuerySchema = z.object({
+  year: z.preprocess((value) => {
+    if (value === null || value === undefined || value === '') {
+      return CURRENT_YEAR;
+    }
+    return parseIntegerInput(value);
+  }, z.number().int().min(1900).max(3000)),
+});
 
 export async function POST(request: Request) {
   try {
@@ -16,22 +49,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { year, target } = body;
-
-    if (!year || !target) {
+    const bodyValidation = validateWithSchema(
+      readingGoalBodySchema,
+      await request.json()
+    );
+    if (!bodyValidation.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: bodyValidation.error },
         { status: 400 }
       );
     }
 
-    if (target < 1 || target > 1000) {
-      return NextResponse.json(
-        { error: 'Target must be between 1 and 1000' },
-        { status: 400 }
-      );
-    }
+    const { year, target } = bodyValidation.data;
 
     // Check if goal exists for this year
     const existingGoal = await prisma.readingGoal.findUnique({
@@ -88,7 +117,17 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString());
+    const queryValidation = validateWithSchema(readingGoalQuerySchema, {
+      year: searchParams.get('year'),
+    });
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { error: queryValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const { year } = queryValidation.data;
 
     const goal = await prisma.readingGoal.findUnique({
       where: {

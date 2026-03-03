@@ -2,6 +2,31 @@
 
 import { NextResponse } from 'next/server';
 
+function sanitizeDescription(rawDescription: unknown) {
+  const description =
+    typeof rawDescription === 'string' ? rawDescription : '';
+
+  if (!description) {
+    return '';
+  }
+
+  return description
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, ' ')
+    .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, ' ')
+    .replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function fetchFromGoogle(id: string) {
   try {
     const response = await fetch(
@@ -17,7 +42,7 @@ async function fetchFromGoogle(id: string) {
       title: item.volumeInfo?.title || '',
       subtitle: item.volumeInfo?.subtitle || '',
       authors: item.volumeInfo?.authors || [],
-      description: item.volumeInfo?.description || '',
+      description: sanitizeDescription(item.volumeInfo?.description),
       publishedDate: item.volumeInfo?.publishedDate || '',
       publisher: item.volumeInfo?.publisher || '',
       pageCount: item.volumeInfo?.pageCount || 0,
@@ -35,7 +60,7 @@ async function fetchFromGoogle(id: string) {
       infoLink: item.volumeInfo?.infoLink || '',
       source: 'google',
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -54,9 +79,11 @@ async function fetchFromOpenLibrary(id: string) {
     // Get description
     let description = '';
     if (work.description) {
-      description = typeof work.description === 'string' 
-        ? work.description 
-        : work.description.value || '';
+      description = sanitizeDescription(
+        typeof work.description === 'string'
+          ? work.description
+          : work.description.value || ''
+      );
     }
     
     // Get author names
@@ -74,7 +101,7 @@ async function fetchFromOpenLibrary(id: string) {
               authorNames.push(author.name);
             }
           }
-        } catch (err) {
+        } catch {
           // Skip if author fetch fails
         }
       }
@@ -107,7 +134,7 @@ async function fetchFromOpenLibrary(id: string) {
           isbn = firstEdition.isbn_13?.[0] || firstEdition.isbn_10?.[0] || '';
         }
       }
-    } catch (err) {
+    } catch {
       // Optional
     }
     
@@ -123,7 +150,7 @@ async function fetchFromOpenLibrary(id: string) {
         averageRating = ratings.summary?.average || 0;
         ratingsCount = ratings.summary?.count || 0;
       }
-    } catch (err) {
+    } catch {
       // Optional
     }
     
@@ -147,7 +174,7 @@ async function fetchFromOpenLibrary(id: string) {
       infoLink: `https://openlibrary.org/works/${id}`,
       source: 'openlibrary',
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -181,7 +208,7 @@ export async function GET(
     }
     
     // Merge data from both sources (prioritize based on quality)
-    let book: any = {};
+    let book: Record<string, unknown> = {};
     
     if (googleData && openLibraryData) {
       // Merge both - use best data from each

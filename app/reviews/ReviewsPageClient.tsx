@@ -5,7 +5,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User } from 'next-auth';
 
 interface Review {
   id: string;
@@ -25,43 +24,67 @@ interface BookData {
 
 interface Props {
   reviews: Review[];
-  user: User;
 }
 
-export default function ReviewsPageClient({ reviews, user }: Props) {
+export default function ReviewsPageClient({ reviews }: Props) {
   const router = useRouter();
   const [bookData, setBookData] = useState<BookData>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => reviews.length > 0);
 
   useEffect(() => {
-    async function fetchBookData() {
-      const data: BookData = {};
+    let isCancelled = false;
 
-      for (const review of reviews) {
-        try {
-          const response = await fetch(`/api/books/${review.bookId}`);
-          if (response.ok) {
+    if (reviews.length === 0) {
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    async function fetchBookData() {
+      const uniqueBookIds = [...new Set(reviews.map((review) => review.bookId))];
+      const results = await Promise.all(
+        uniqueBookIds.map(async (bookId) => {
+          try {
+            const response = await fetch(`/api/books/${bookId}`);
+            if (!response.ok) {
+              return null;
+            }
+
             const book = await response.json();
-            data[review.bookId] = {
-              title: book.title,
-              authors: book.authors,
-              thumbnail: book.thumbnail,
+            return {
+              bookId,
+              data: {
+                title: book.title,
+                authors: book.authors,
+                thumbnail: book.thumbnail,
+              },
             };
+          } catch (error) {
+            console.error('Error fetching book:', error);
+            return null;
           }
-        } catch (error) {
-          console.error('Error fetching book:', error);
-        }
+        })
+      );
+
+      if (isCancelled) {
+        return;
+      }
+
+      const data: BookData = {};
+      for (const result of results) {
+        if (!result) continue;
+        data[result.bookId] = result.data;
       }
 
       setBookData(data);
       setLoading(false);
     }
 
-    if (reviews.length > 0) {
-      fetchBookData();
-    } else {
-      setLoading(false);
-    }
+    fetchBookData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [reviews]);
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -104,7 +127,7 @@ export default function ReviewsPageClient({ reviews, user }: Props) {
       ) : reviews.length === 0 ? (
         <div className="empty-reviews">
           <i className="fas fa-star"></i>
-          <h3>You haven't reviewed any books yet</h3>
+          <h3>You haven&apos;t reviewed any books yet</h3>
           <p>Start reading and share your thoughts!</p>
           <Link href="/search" className="browse-books-btn">
             Browse Books
