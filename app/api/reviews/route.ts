@@ -82,7 +82,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const rawBookId = searchParams.get('bookId');
     const bookId = rawBookId?.trim();
-    const { skip, take } = parsePagination(searchParams, {
+    const { page, pageSize, skip, take } = parsePagination(searchParams, {
       defaultPage: 1,
       defaultPageSize: 20,
       maxPageSize: 50,
@@ -95,27 +95,35 @@ export async function GET(request: Request) {
       );
     }
 
-    const reviews = await prisma.review.findMany({
-      where: {
-        bookId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    const where = { bookId };
+    const [items, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      skip,
-      take,
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take,
+      }),
+      prisma.review.count({ where }),
+    ]);
 
-    return NextResponse.json(reviews);
+    return NextResponse.json({
+      items,
+      total,
+      page,
+      pageSize,
+      hasMore: skip + items.length < total,
+    });
   } catch (error) {
     console.error('Fetch reviews error:', error);
     return NextResponse.json(

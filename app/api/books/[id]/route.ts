@@ -2,6 +2,54 @@
 
 import { NextResponse } from 'next/server';
 
+interface Book {
+  id: string;
+  title: string;
+  subtitle: string;
+  authors: string[];
+  description: string;
+  publishedDate: string;
+  publisher: string;
+  pageCount: number;
+  categories: string[];
+  averageRating: number;
+  ratingsCount: number;
+  thumbnail: string;
+  coverImage: string;
+  language: string;
+  isbn: string;
+  previewLink: string;
+  infoLink: string;
+  source?: 'google' | 'openlibrary';
+}
+
+function decodeHtmlEntities(value: string) {
+  return value.replace(
+    /&(#x?[0-9a-fA-F]+|amp|quot|apos|lt|gt|nbsp);/g,
+    (match, entity: string) => {
+      const normalized = entity.toLowerCase();
+      if (normalized === 'amp') return '&';
+      if (normalized === 'quot') return '"';
+      if (normalized === 'apos') return "'";
+      if (normalized === 'lt') return '<';
+      if (normalized === 'gt') return '>';
+      if (normalized === 'nbsp') return ' ';
+
+      if (normalized.startsWith('#x')) {
+        const codePoint = Number.parseInt(normalized.slice(2), 16);
+        return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint);
+      }
+
+      if (normalized.startsWith('#')) {
+        const codePoint = Number.parseInt(normalized.slice(1), 10);
+        return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint);
+      }
+
+      return match;
+    }
+  );
+}
+
 function sanitizeDescription(rawDescription: unknown) {
   const description =
     typeof rawDescription === 'string' ? rawDescription : '';
@@ -10,24 +58,20 @@ function sanitizeDescription(rawDescription: unknown) {
     return '';
   }
 
-  return description
+  const decodedDescription = decodeHtmlEntities(description);
+
+  return decodedDescription
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, ' ')
     .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, ' ')
     .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, ' ')
     .replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-async function fetchFromGoogle(id: string) {
+async function fetchFromGoogle(id: string): Promise<Book | null> {
   try {
     const response = await fetch(
       `https://www.googleapis.com/books/v1/volumes/${id}`
@@ -65,7 +109,7 @@ async function fetchFromGoogle(id: string) {
   }
 }
 
-async function fetchFromOpenLibrary(id: string) {
+async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
   try {
     // Fetch work details
     const workResponse = await fetch(
@@ -189,8 +233,8 @@ export async function GET(
     // Determine source from ID format
     const isGoogleId = id.length < 20 && !id.startsWith('OL');
     
-    let googleData = null;
-    let openLibraryData = null;
+    let googleData: Book | null = null;
+    let openLibraryData: Book | null = null;
     
     if (isGoogleId) {
       // Try Google first, fallback to Open Library
@@ -208,7 +252,7 @@ export async function GET(
     }
     
     // Merge data from both sources (prioritize based on quality)
-    let book: Record<string, unknown> = {};
+    let book: Book | undefined;
     
     if (googleData && openLibraryData) {
       // Merge both - use best data from each
@@ -235,25 +279,29 @@ export async function GET(
     } else if (googleData) {
       book = {
         ...googleData,
+        source: undefined,
         title: googleData.title || 'Unknown Title',
         authors: googleData.authors.length > 0 ? googleData.authors : ['Unknown Author'],
         description: googleData.description || 'No description available',
         thumbnail: googleData.thumbnail || '/images/no-cover.jpg',
         coverImage: googleData.coverImage || '/images/no-cover.jpg',
       };
-      delete book.source;
     } else if (openLibraryData) {
       book = {
         ...openLibraryData,
+        source: undefined,
         title: openLibraryData.title || 'Unknown Title',
         authors: openLibraryData.authors.length > 0 ? openLibraryData.authors : ['Unknown Author'],
         description: openLibraryData.description || 'No description available',
         thumbnail: openLibraryData.thumbnail || '/images/no-cover.jpg',
         coverImage: openLibraryData.coverImage || '/images/no-cover.jpg',
       };
-      delete book.source;
     } else {
       throw new Error('Book not found in any source');
+    }
+
+    if (!book) {
+      throw new Error('Book transformation failed');
     }
     
     return NextResponse.json(book);

@@ -7,7 +7,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { validateWithSchema } from '@/lib/validation';
 
-const CURRENT_YEAR = new Date().getFullYear();
+function getCurrentYear() {
+  return new Date().getFullYear();
+}
 
 function parseIntegerInput(value: unknown) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -32,7 +34,7 @@ const readingGoalBodySchema = z.object({
 const readingGoalQuerySchema = z.object({
   year: z.preprocess((value) => {
     if (value === null || value === undefined || value === '') {
-      return CURRENT_YEAR;
+      return getCurrentYear();
     }
     return parseIntegerInput(value);
   }, z.number().int().min(1900).max(3000)),
@@ -49,9 +51,22 @@ export async function POST(request: Request) {
       );
     }
 
+    let parsedBody: unknown;
+    try {
+      parsedBody = await request.json();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return NextResponse.json(
+          { error: 'Malformed JSON' },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
+
     const bodyValidation = validateWithSchema(
       readingGoalBodySchema,
-      await request.json()
+      parsedBody
     );
     if (!bodyValidation.success) {
       return NextResponse.json(

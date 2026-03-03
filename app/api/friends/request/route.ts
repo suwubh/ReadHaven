@@ -22,9 +22,22 @@ export async function POST(request: Request) {
       );
     }
 
+    let parsedBody: unknown;
+    try {
+      parsedBody = await request.json();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return NextResponse.json(
+          { error: 'Invalid JSON' },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
+
     const bodyValidation = validateWithSchema(
       friendRequestBodySchema,
-      await request.json()
+      parsedBody
     );
     if (!bodyValidation.success) {
       return NextResponse.json(

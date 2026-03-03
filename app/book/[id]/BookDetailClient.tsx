@@ -72,6 +72,10 @@ function formatDate(dateValue: string | Date) {
   return DATE_FORMATTER.format(parsedDate);
 }
 
+function stripHtml(value: string) {
+  return value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function StarRating({
   rating,
   className,
@@ -99,6 +103,7 @@ export default function BookDetailClient({
   bookReviews,
 }: Props) {
   const router = useRouter();
+  const safeDescription = stripHtml(book.description);
   const [showShelfDropdown, setShowShelfDropdown] = useState(false);
   const [rating, setRating] = useState(initialReview?.rating || 0);
   const [reviewText, setReviewText] = useState(initialReview?.content || '');
@@ -403,7 +408,7 @@ export default function BookDetailClient({
       <div className="book-description-section">
         <h2>About this book</h2>
         <p className="book-description-full">
-          {book.description || 'No description available.'}
+          {safeDescription || 'No description available.'}
         </p>
       </div>
     </div>

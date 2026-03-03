@@ -35,12 +35,25 @@ export default function ReviewsPageClient({ reviews }: Props) {
     let isCancelled = false;
 
     if (reviews.length === 0) {
+      queueMicrotask(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setBookData({});
+        setLoading(false);
+      });
+
       return () => {
         isCancelled = true;
       };
     }
 
     async function fetchBookData() {
+      if (!isCancelled) {
+        setLoading(true);
+      }
+
       const uniqueBookIds = [...new Set(reviews.map((review) => review.bookId))];
       const results = await Promise.all(
         uniqueBookIds.map(async (bookId) => {

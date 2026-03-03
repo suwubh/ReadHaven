@@ -21,9 +21,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 8 || password.length > 72) {
+    const passwordBytes = Buffer.byteLength(password, 'utf8');
+    if (passwordBytes < 8 || passwordBytes > 72) {
       return NextResponse.json(
-        { error: 'Password must be 8-72 characters long' },
+        { error: 'Password must be between 8 and 72 bytes (UTF-8)' },
         { status: 400 }
       );
     }
@@ -97,8 +98,25 @@ export async function POST(request: Request) {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === 'P2002'
     ) {
+      const rawTarget = error.meta?.target;
+      const targetColumns = Array.isArray(rawTarget)
+        ? rawTarget.map((value) => String(value).toLowerCase())
+        : typeof rawTarget === 'string'
+          ? [rawTarget.toLowerCase()]
+          : [];
+
+      const isEmailViolation = targetColumns.some((column) =>
+        column.includes('email')
+      );
+
       return NextResponse.json(
-        { error: 'Email already registered' },
+        {
+          error: isEmailViolation
+            ? 'Email already registered'
+            : targetColumns.length > 0
+              ? `Unique constraint violation: ${targetColumns.join(', ')}`
+              : 'Unique constraint violation',
+        },
         { status: 400 }
       );
     }

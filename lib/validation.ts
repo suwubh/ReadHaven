@@ -1,21 +1,33 @@
 import { z } from 'zod';
 
-interface BoundedIntOptions {
+export interface BoundedIntOptions {
   defaultValue: number;
   min?: number;
   max?: number;
 }
 
-interface PaginationOptions {
+export interface PaginationOptions {
   defaultPage?: number;
+  maxPage?: number;
   defaultPageSize?: number;
   maxPageSize?: number;
 }
 
+export interface PaginationResult {
+  page: number;
+  pageSize: number;
+  skip: number;
+  take: number;
+}
+
+export type ValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
 export function parseBoundedInt(
   rawValue: string | null | undefined,
   options: BoundedIntOptions
-) {
+): number {
   const min = options.min ?? 1;
   const max = options.max ?? Number.MAX_SAFE_INTEGER;
   const fallback = clampInt(options.defaultValue, min, max);
@@ -24,21 +36,23 @@ export function parseBoundedInt(
     return fallback;
   }
 
-  const parsed = Number.parseInt(rawValue, 10);
-  if (Number.isNaN(parsed)) {
+  const normalized = rawValue.trim();
+  if (!/^-?\d+$/.test(normalized)) {
     return fallback;
   }
 
+  const parsed = Number.parseInt(normalized, 10);
   return clampInt(parsed, min, max);
 }
 
 export function parsePagination(
   searchParams: URLSearchParams,
   options: PaginationOptions = {}
-) {
+): PaginationResult {
   const page = parseBoundedInt(searchParams.get('page'), {
     defaultValue: options.defaultPage ?? 1,
     min: 1,
+    max: options.maxPage ?? 1000,
   });
 
   const pageSize = parseBoundedInt(searchParams.get('pageSize'), {
@@ -62,7 +76,7 @@ export function normalizeEmail(email: string) {
 export function validateWithSchema<T>(
   schema: z.ZodType<T>,
   data: unknown
-) {
+): ValidationResult<T> {
   const parsed = schema.safeParse(data);
   if (parsed.success) {
     return {
@@ -73,7 +87,12 @@ export function validateWithSchema<T>(
 
   return {
     success: false as const,
-    error: parsed.error.issues.map((issue) => issue.message).join('; '),
+    error: parsed.error.issues
+      .map((issue) => {
+        const path = issue.path.length > 0 ? issue.path.join('.') : 'root';
+        return `${path}: ${issue.message}`;
+      })
+      .join('; '),
   };
 }
 
