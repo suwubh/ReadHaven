@@ -50,7 +50,31 @@ async function getUserBookData(userId: string | undefined, bookId: string) {
   return { shelves, review };
 }
 
-async function getBookReviews(bookId: string) {
+interface ReviewQueryOptions {
+  page?: number;
+  pageSize?: number;
+}
+
+const DEFAULT_REVIEW_PAGE = 1;
+const DEFAULT_REVIEW_PAGE_SIZE = 20;
+const MAX_REVIEW_PAGE_SIZE = 100;
+
+function toPositiveInteger(value: number | undefined, fallback: number) {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.floor(value as number));
+}
+
+async function getBookReviews(bookId: string, options: ReviewQueryOptions = {}) {
+  const page = toPositiveInteger(options.page, DEFAULT_REVIEW_PAGE);
+  const requestedPageSize = toPositiveInteger(
+    options.pageSize,
+    DEFAULT_REVIEW_PAGE_SIZE
+  );
+  const pageSize = Math.min(requestedPageSize, MAX_REVIEW_PAGE_SIZE);
+
   return prisma.review.findMany({
     where: { bookId },
     include: {
@@ -65,6 +89,8 @@ async function getBookReviews(bookId: string) {
     orderBy: {
       createdAt: 'desc',
     },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
   });
 }
 

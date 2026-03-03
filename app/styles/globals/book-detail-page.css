@@ -280,14 +280,14 @@
 .book-reviews-section {
   margin-top: 28px;
   padding: 22px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #e0e0e0;
   border-radius: 10px;
-  background-color: #fcfcfc;
+  background-color: #f9f9f9;
 }
 
 .book-reviews-section h3 {
   margin: 0 0 16px;
-  color: #2f2f2f;
+  color: #333;
   font-size: 1.15rem;
   display: flex;
   align-items: baseline;
@@ -316,7 +316,7 @@
   padding: 14px;
   border-radius: 8px;
   background-color: #fff;
-  border: 1px solid #ececec;
+  border: 1px solid #e0e0e0;
 }
 
 .book-review-header {
@@ -328,7 +328,7 @@
 }
 
 .book-review-author {
-  color: #2f2f2f;
+  color: #333;
   font-weight: 600;
 }
 

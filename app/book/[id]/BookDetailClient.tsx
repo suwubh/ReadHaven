@@ -55,6 +55,42 @@ interface Props {
   bookReviews: BookReview[];
 }
 
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatDate(dateValue: string | Date) {
+  const parsedDate = new Date(dateValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Unknown';
+  }
+
+  return DATE_FORMATTER.format(parsedDate);
+}
+
+function StarRating({
+  rating,
+  className,
+}: {
+  rating: number;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <i
+          key={star}
+          className={`fas fa-star ${star <= rating ? 'filled' : ''}`}
+        ></i>
+      ))}
+    </div>
+  );
+}
+
 export default function BookDetailClient({
   book,
   session,
@@ -303,20 +339,11 @@ export default function BookDetailClient({
                         <div className="book-review-header">
                           <span className="book-review-author">{reviewAuthor}</span>
                           <span className="book-review-date">
-                            {new Date(review.createdAt).toLocaleDateString()}
+                            {formatDate(review.createdAt)}
                           </span>
                         </div>
 
-                        <div className="book-review-stars">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <i
-                              key={star}
-                              className={`fas fa-star ${
-                                star <= review.rating ? 'filled' : ''
-                              }`}
-                            ></i>
-                          ))}
-                        </div>
+                        <StarRating rating={review.rating} className="book-review-stars" />
 
                         {review.content && (
                           <p className="book-review-content">{review.content}</p>
@@ -341,7 +368,7 @@ export default function BookDetailClient({
               <strong>Published:</strong>
               <span>
                 {book.publishedDate
-                  ? new Date(book.publishedDate).toLocaleDateString()
+                  ? formatDate(book.publishedDate)
                   : 'Unknown'}
               </span>
             </div>
