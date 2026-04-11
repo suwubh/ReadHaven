@@ -294,7 +294,7 @@ export default function FriendsPageClient({ data, currentUserId }: Props) {
                 <div className="empty-state">
                   <i className="fas fa-envelope"></i>
                   <h3>No pending requests</h3>
-                  <p>You'll see friend requests here</p>
+                  <p>You&apos;ll see friend requests here</p>
                 </div>
               ) : (
                 data.pendingRequests.map((request) => (
@@ -338,7 +338,7 @@ export default function FriendsPageClient({ data, currentUserId }: Props) {
                 <div className="empty-state">
                   <i className="fas fa-newspaper"></i>
                   <h3>No recent activity</h3>
-                  <p>Your friends' reading activity will appear here</p>
+                  <p>Your friends&apos; reading activity will appear here</p>
                 </div>
               ) : (
                 data.activities.map((activity) => (

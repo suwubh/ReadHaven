@@ -9,7 +9,7 @@ import { User } from 'next-auth';
 interface Shelf {
   id: string;
   name: string;
-  books: any[];
+  books: unknown[];
 }
 
 interface ReadingGoal {

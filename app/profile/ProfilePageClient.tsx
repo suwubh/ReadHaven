@@ -21,7 +21,7 @@ interface Review {
 interface Shelf {
   id: string;
   name: string;
-  books: any[];
+  books: Array<{ addedAt: Date | string }>;
 }
 
 interface ReadingGoal {

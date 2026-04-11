@@ -9,6 +9,13 @@ import { User } from 'next-auth';
 import MobileTopBar from '../components/MobileTopBar';
 import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
+interface SearchBook {
+  id: string;
+  title: string;
+  authors?: string[];
+  thumbnail: string;
+}
+
 interface Props {
   user: User;
 }
@@ -17,8 +24,8 @@ export default function CreatePostClient({ user }: Props) {
   const router = useRouter();
   const [content, setContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState<SearchBook[]>([]);
+  const [selectedBook, setSelectedBook] = useState<SearchBook | null>(null);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const accountItems = getAccountNavItems(Boolean(user?.id));

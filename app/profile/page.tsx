@@ -45,10 +45,6 @@ async function getUserProfileData(userId: string) {
   const currentYearGoal =
     readingGoals.find(g => g.year === new Date().getFullYear()) ?? null;
 
-
-  // Get favorite genres from reviewed books
-  const reviewedBookIds = reviews.map(r => r.bookId);
-
   return {
     user,
     totalBooks,

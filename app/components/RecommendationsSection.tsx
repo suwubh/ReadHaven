@@ -4,8 +4,8 @@ export default function RecommendationsSection() {
       <div className="recommendation-text">
         <h4>Deciding what to read next?</h4>
         <p>
-          You're in the right place. Tell us what titles or genres you've 
-          enjoyed in the past, and we'll give you surprisingly insightful 
+          You&apos;re in the right place. Tell us what titles or genres you&apos;ve
+          enjoyed in the past, and we&apos;ll give you surprisingly insightful
           recommendations.
         </p>
       </div>

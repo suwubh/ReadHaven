@@ -88,7 +88,7 @@ export default async function ShelfPage({ params }: PageProps) {
     return (
       <div className="shelf-not-found">
         <h1>Shelf not found</h1>
-        <p>The shelf "{displayShelfName || '(unknown)'}" does not exist.</p>
+        <p>{`The shelf "${displayShelfName || '(unknown)'}" does not exist.`}</p>
       </div>
     );
   }

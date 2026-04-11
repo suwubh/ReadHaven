@@ -115,7 +115,7 @@ export default function ReadingChallengeClient({ data, user }: Props) {
                 <div className="challenge-complete">
                   <i className="fas fa-trophy"></i>
                   <h3>🎉 Challenge Complete!</h3>
-                  <p>Congratulations! You've reached your reading goal!</p>
+                  <p>Congratulations! You&apos;ve reached your reading goal!</p>
                 </div>
               ) : (
                 <div className="challenge-progress">

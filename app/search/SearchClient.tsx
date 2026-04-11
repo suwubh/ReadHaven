@@ -1,7 +1,7 @@
 // app/search/SearchClient.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MobileTopBar from '../components/MobileTopBar';
@@ -30,20 +30,7 @@ export default function SearchClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  useEffect(() => {
-    // if query changes (from URL), reset input and fetch first page
-    setSearchInput(query);
-    if (query) {
-      searchBooks(query, 1);
-    } else {
-      setBooks([]);
-      setHasMore(false);
-      setCurrentPage(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-
-  const searchBooks = async (searchQuery: string, page: number) => {
+  const searchBooks = useCallback(async (searchQuery: string, page: number) => {
     setLoading(true);
     setError('');
 
@@ -60,7 +47,7 @@ export default function SearchClient() {
       setBooks(data.books ?? []);
       setHasMore(Boolean(data.hasMore));
       setCurrentPage(page);
-    } catch (err) {
+    } catch {
       setError('Failed to search books. Please try again.');
       setBooks([]);
       setHasMore(false);
@@ -68,7 +55,18 @@ export default function SearchClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    setSearchInput(query);
+    if (query) {
+      void searchBooks(query, 1);
+    } else {
+      setBooks([]);
+      setHasMore(false);
+      setCurrentPage(1);
+    }
+  }, [query, searchBooks]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +121,7 @@ export default function SearchClient() {
 
         {!loading && !error && query && books.length === 0 && (
           <div className="no-results">
-            <h3>No books found for "{query}"</h3>
+            <h3>{`No books found for "${query}"`}</h3>
             <p>Try different keywords or check your spelling</p>
           </div>
         )}
@@ -131,7 +129,7 @@ export default function SearchClient() {
         {!loading && books.length > 0 && (
           <>
             <div className="results-header">
-              <h2>Results for "{query}"</h2>
+              <h2>{`Results for "${query}"`}</h2>
               <p className="results-count">{books.length} books found</p>
             </div>
 

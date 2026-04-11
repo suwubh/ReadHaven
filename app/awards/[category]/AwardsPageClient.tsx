@@ -178,7 +178,7 @@ export default function AwardsPageClient({ category }: Props) {
           <div className="awards-empty">
             <i className="fas fa-book"></i>
             <h3>No books found</h3>
-            <p>We couldn't find any books for this category.</p>
+            <p>We couldn&apos;t find any books for this category.</p>
             <Link href="/" className="back-btn">
               Back to Home
             </Link>

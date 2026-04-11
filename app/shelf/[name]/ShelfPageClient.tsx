@@ -90,7 +90,7 @@ export default function ShelfPageClient({ shelf, user }: Props) {
           <select
             id="sort"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'date' | 'title' | 'author')}
             className="sort-select"
           >
             <option value="date">Date Added</option>
