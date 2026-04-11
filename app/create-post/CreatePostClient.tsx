@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User } from 'next-auth';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface Props {
   user: User;
@@ -19,6 +21,7 @@ export default function CreatePostClient({ user }: Props) {
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const accountItems = getAccountNavItems(Boolean(user?.id));
 
   const handleSearchBooks = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -76,7 +79,14 @@ export default function CreatePostClient({ user }: Props) {
 
   return (
     <div className="create-post-page">
-      <div className="create-post-header">
+      <MobileTopBar
+        title="Create Post"
+        backHref="/feed"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="create-post-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back
         </Link>

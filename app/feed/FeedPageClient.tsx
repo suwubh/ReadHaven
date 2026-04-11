@@ -5,6 +5,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface Post {
   id: string;
@@ -34,6 +36,7 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
   const lastSyncedPostsRef = useRef(posts);
   const loginWithNoticeHref = '/login?notice=login-required';
   const createPostHref = currentUserId ? '/create-post' : loginWithNoticeHref;
+  const accountItems = getAccountNavItems(Boolean(currentUserId));
 
   useEffect(() => {
     const postsChanged = posts !== lastSyncedPostsRef.current;
@@ -121,7 +124,15 @@ export default function FeedPageClient({ posts, currentUserId }: Props) {
 
   return (
     <div className="feed-page">
-      <div className="feed-page-header">
+      <MobileTopBar
+        title="Book Feed"
+        backHref="/"
+        primaryAction={{ href: createPostHref, label: 'Post', icon: 'fas fa-plus' }}
+        showProfileTrigger={Boolean(currentUserId)}
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="feed-page-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

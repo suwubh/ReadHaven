@@ -4,6 +4,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import MobileTopBar from '../../components/MobileTopBar';
+import { primaryMobileNavItems } from '../../components/mobile-nav';
 
 interface Book {
   id: string;
@@ -81,7 +83,8 @@ export default function AwardsPageClient({ category }: Props) {
 
   return (
     <div className="awards-page">
-      <div className="awards-page-header">
+      <MobileTopBar title="Awards" backHref="/" navItems={primaryMobileNavItems} />
+      <div className="awards-page-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

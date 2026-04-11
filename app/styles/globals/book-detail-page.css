@@ -474,6 +474,7 @@
 
   .book-detail-rating {
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .book-actions {
@@ -494,9 +495,46 @@
     justify-content: center;
   }
 
+  .shelf-dropdown-container {
+    width: 100%;
+  }
+
+  .shelf-dropdown {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+  }
+
   .book-detail-container,
   .book-description-section {
     padding: 20px;
+  }
+
+  .review-actions {
+    flex-wrap: wrap;
+  }
+
+  .submit-review-btn,
+  .cancel-btn {
+    flex: 1 1 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-cover-large {
+    width: min(100%, 220px);
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
+
+  .book-reviews-section {
+    padding: 18px;
+  }
+
+  .book-review-content,
+  .meta-item span {
+    overflow-wrap: anywhere;
   }
 }
 

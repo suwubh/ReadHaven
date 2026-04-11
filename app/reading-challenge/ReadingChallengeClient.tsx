@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User } from 'next-auth';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface ReadingGoal {
   id: string;
@@ -30,6 +32,7 @@ export default function ReadingChallengeClient({ data, user }: Props) {
   const [target, setTarget] = useState(data.currentGoal?.target || 20);
   const [showForm, setShowForm] = useState(!data.currentGoal);
   const [loading, setLoading] = useState(false);
+  const accountItems = getAccountNavItems(Boolean(user?.id));
 
   const progressPercentage = data.currentGoal
     ? Math.min((data.booksReadThisYear / data.currentGoal.target) * 100, 100)
@@ -69,7 +72,14 @@ export default function ReadingChallengeClient({ data, user }: Props) {
 
   return (
     <div className="challenge-page">
-      <div className="challenge-header">
+      <MobileTopBar
+        title="Reading Challenge"
+        backHref="/"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="challenge-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

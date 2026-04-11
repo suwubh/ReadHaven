@@ -5,6 +5,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface Review {
   id: string;
@@ -30,6 +32,7 @@ export default function ReviewsPageClient({ reviews }: Props) {
   const router = useRouter();
   const [bookData, setBookData] = useState<BookData>({});
   const [loading, setLoading] = useState(() => reviews.length > 0);
+  const accountItems = getAccountNavItems(true);
 
   useEffect(() => {
     let isCancelled = false;
@@ -123,7 +126,14 @@ export default function ReviewsPageClient({ reviews }: Props) {
 
   return (
     <div className="reviews-page">
-      <div className="reviews-header">
+      <MobileTopBar
+        title="My Reviews"
+        backHref="/"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="reviews-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

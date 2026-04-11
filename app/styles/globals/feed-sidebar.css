@@ -223,3 +223,11 @@
   margin-right: 8px;
 }
 
+@media (max-width: 768px) {
+  .feed-sidebar {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+}
+

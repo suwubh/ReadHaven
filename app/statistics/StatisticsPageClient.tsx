@@ -3,6 +3,8 @@
 'use client';
 
 import Link from 'next/link';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface ReadingGoal {
   year: number;
@@ -27,13 +29,21 @@ interface Props {
 export default function StatisticsPageClient({ stats }: Props) {
   const currentYear = new Date().getFullYear();
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const accountItems = getAccountNavItems(true);
   
   const years = Object.keys(stats.booksByYear).sort((a, b) => parseInt(b) - parseInt(a));
   const maxBooksInMonth = Math.max(...stats.booksByMonth, 1);
 
   return (
     <div className="statistics-page">
-      <div className="statistics-header">
+      <MobileTopBar
+        title="Reading Stats"
+        backHref="/"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="statistics-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

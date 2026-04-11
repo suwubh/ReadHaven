@@ -292,5 +292,24 @@
   .book-cover {
     height: 280px;
   }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-btn {
+    width: min(100%, 220px);
+  }
+}
+
+@media (max-width: 480px) {
+  .books-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .book-info {
+    padding: 16px;
+  }
 }
 

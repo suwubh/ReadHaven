@@ -225,6 +225,10 @@
     font-size: 2rem;
   }
 
+  .shelf-controls {
+    flex-wrap: wrap;
+  }
+
   .shelf-books-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 15px;
@@ -240,6 +244,12 @@
 
   .shelf-book-title {
     font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .shelf-books-grid {
+    grid-template-columns: 1fr;
   }
 }
 

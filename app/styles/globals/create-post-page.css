@@ -260,3 +260,27 @@
   cursor: not-allowed;
 }
 
+@media (max-width: 768px) {
+  .create-post-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .post-form {
+    padding: 20px;
+  }
+
+  .book-search-form {
+    flex-direction: column;
+  }
+
+  .selected-book {
+    align-items: flex-start;
+    padding-right: 50px;
+  }
+
+  .book-result-item {
+    align-items: flex-start;
+  }
+}
+

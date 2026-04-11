@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Session } from 'next-auth';
 import { shelfNameToLegacySlug, shelfNameToSlug } from '@/lib/shelf-slug';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface Review {
   id: string;
@@ -96,10 +98,18 @@ export default function ProfilePageClient({ data, session }: Props) {
     ?.books.filter(
       b => new Date(b.addedAt).getFullYear() === currentYear
     ).length || 0;
+  const accountItems = getAccountNavItems(Boolean(session.user?.id));
 
   return (
     <div className="profile-page">
-      <div className="profile-page-header">
+      <MobileTopBar
+        title="Profile"
+        backHref="/"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="profile-page-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

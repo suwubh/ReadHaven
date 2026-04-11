@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Session } from 'next-auth';
+import MobileTopBar from '../../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../../components/mobile-nav';
 
 interface Book {
   id: string;
@@ -109,6 +111,7 @@ export default function BookDetailClient({
   const [reviewText, setReviewText] = useState(initialReview?.content || '');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const accountItems = getAccountNavItems(Boolean(session?.user?.id));
 
   const handleAddToShelf = async (shelfId: string) => {
     if (!session) {
@@ -189,7 +192,14 @@ export default function BookDetailClient({
 
   return (
     <div className="book-detail-page">
-      <div className="book-detail-header">
+      <MobileTopBar
+        title={book.title}
+        backHref="/search"
+        showProfileTrigger={Boolean(session?.user?.id)}
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="book-detail-header mobile-page-heading">
         <Link href="/search" className="back-link">
           ← Back to Search
         </Link>

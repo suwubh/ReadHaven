@@ -4,6 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import MobileTopBar from '../components/MobileTopBar';
+import { primaryMobileNavItems } from '../components/mobile-nav';
 
 interface Book {
   id: string;
@@ -85,7 +87,8 @@ export default function SearchClient() {
 
   return (
     <div className="search-page">
-      <div className="search-header">
+      <MobileTopBar title="Search Books" backHref="/" navItems={primaryMobileNavItems} />
+      <div className="search-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

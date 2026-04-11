@@ -100,6 +100,12 @@
   color: #4e342e;
 }
 
+.meta-item,
+.profile-email-text,
+.profile-bio {
+  overflow-wrap: anywhere;
+}
+
 .edit-profile-btn {
   padding: 10px 24px;
   background-color: #4e342e;
@@ -323,10 +329,13 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 24px;
+    gap: 20px;
   }
 
   .profile-meta {
     justify-content: center;
+    gap: 12px;
   }
 
   .stats-grid {
@@ -340,6 +349,35 @@
   .view-challenge-btn {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+  }
+
+  .avatar-placeholder-large {
+    font-size: 3rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-card,
+  .shelves-overview,
+  .goal-overview {
+    padding: 20px;
+  }
+
+  .goal-numbers {
+    font-size: 2.4rem;
+  }
+
+  .goal-numbers .target {
+    font-size: 1.7rem;
   }
 }
 

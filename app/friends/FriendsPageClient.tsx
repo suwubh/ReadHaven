@@ -5,6 +5,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import MobileTopBar from '../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
 interface User {
   id: string;
@@ -52,6 +54,7 @@ export default function FriendsPageClient({ data, currentUserId }: Props) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'activity'>('friends');
+  const accountItems = getAccountNavItems(true);
 
   const friendsList = data.friends.map(f => 
     f.userId === currentUserId ? f.friend : f.user
@@ -165,7 +168,14 @@ export default function FriendsPageClient({ data, currentUserId }: Props) {
 
   return (
     <div className="friends-page">
-      <div className="friends-header">
+      <MobileTopBar
+        title="Friends"
+        backHref="/"
+        showProfileTrigger={Boolean(currentUserId)}
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="friends-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>

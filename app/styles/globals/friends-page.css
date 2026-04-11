@@ -277,3 +277,55 @@
   margin-top: 5px;
 }
 
+@media (max-width: 768px) {
+  .friends-search-section,
+  .friends-content {
+    padding: 20px;
+  }
+
+  .search-friends-form {
+    flex-direction: column;
+  }
+
+  .friends-tabs {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+
+  .tab {
+    min-width: 150px;
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .user-card,
+  .friend-card,
+  .request-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .user-info {
+    min-width: 0;
+  }
+
+  .user-info p {
+    overflow-wrap: anywhere;
+  }
+
+  .request-actions {
+    width: 100%;
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .request-actions > * {
+    flex: 1 1 140px;
+  }
+
+  .activity-item {
+    flex-direction: column;
+  }
+}
+

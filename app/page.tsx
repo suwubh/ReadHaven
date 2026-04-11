@@ -14,6 +14,8 @@ import FeedSidebar from './components/FeedSidebar';
 import Footer from './components/Footer';
 import ScrollToSearchButton from './components/ScrollToSearchButton';
 import { ensureDefaultShelves } from '@/lib/shelves';
+import HomeMobileChrome from './components/HomeMobileChrome';
+import { primaryMobileNavItems } from './components/mobile-nav';
 
 async function getUserStats(userId: string) {
   await ensureDefaultShelves(userId);
@@ -99,6 +101,18 @@ export default async function Home() {
 
   return (
     <main>
+      <HomeMobileChrome
+        navItems={primaryMobileNavItems}
+        profileLabel={session?.user ? 'profile shortcuts' : 'account options'}
+        profilePanel={
+          session?.user ? (
+            <ProfileContainer user={session.user} stats={userStats} />
+          ) : (
+            <SignInContainer />
+          )
+        }
+        communityPanel={<FeedSidebar posts={recentPosts} currentUserId={session?.user?.id} />}
+      />
       <ScrollToSearchButton />
       <HeroSection />
 

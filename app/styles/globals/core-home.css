@@ -863,6 +863,19 @@ main {
   }
 }
 
+@media (max-width: 1024px) {
+  .page-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .right-column {
+    position: relative;
+    top: auto;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 1200px) {
   .discover-section h2 {
     text-align: center;
@@ -902,9 +915,46 @@ main {
 }
 
 @media (max-width: 768px) {
+  .page-layout {
+    padding: 0 12px 24px;
+  }
+
+  .right-column {
+    display: none;
+  }
+
+  .hero-section {
+    height: min(78vh, 640px);
+    min-height: 520px;
+    padding-top: 72px;
+  }
+
   .overlay-text {
-    font-size: 2rem;
-    left: 5%;
+    top: 82px;
+    left: 16px;
+    font-size: clamp(1.8rem, 10vw, 2.6rem);
+  }
+
+  .hero-content {
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 40px;
+    transform: none;
+    text-align: left;
+  }
+
+  .hero-title {
+    text-align: left;
+    font-size: clamp(1.85rem, 8vw, 3rem);
+  }
+
+  .recommendations-container,
+  .discover-section,
+  .awards-section,
+  .search-browse-section {
+    max-width: 100%;
+    margin: 24px 0;
   }
 
   .book-series-1,
@@ -933,6 +983,23 @@ main {
 
   .browse-links-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-browse-section {
+    padding: 24px 0;
+  }
+
+  .search-browse-section h3,
+  .search-input {
+    margin-left: 0;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .browse-links-grid {
+    padding-left: 0;
   }
 
   .footer-container {

@@ -307,3 +307,39 @@
   color: #666;
 }
 
+@media (max-width: 768px) {
+  .current-challenge,
+  .goal-form,
+  .past-challenges,
+  .no-challenge {
+    padding: 22px;
+  }
+
+  .big-number {
+    font-size: 3rem;
+  }
+
+  .books-target {
+    font-size: 2.2rem;
+  }
+
+  .target-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .target-input {
+    width: 100%;
+  }
+
+  .quick-goal-buttons,
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .save-goal-btn,
+  .cancel-btn {
+    flex: 1 1 170px;
+  }
+}
+

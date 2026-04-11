@@ -271,6 +271,7 @@
   .awards-book-item {
     flex-direction: column;
     padding: 20px;
+    padding-top: 72px;
   }
 
   .awards-rank {
@@ -298,10 +299,22 @@
 
   .awards-rating {
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .awards-view-link {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .awards-book-cover {
+    max-width: 170px;
+    height: 255px;
+  }
+
+  .awards-book-details h2 {
+    font-size: 1.3rem;
   }
 }

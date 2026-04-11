@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User } from 'next-auth';
+import MobileTopBar from '../../components/MobileTopBar';
+import { getAccountNavItems, primaryMobileNavItems } from '../../components/mobile-nav';
 
 interface ShelfBook {
   id: string;
@@ -30,6 +32,7 @@ interface Props {
 export default function ShelfPageClient({ shelf, user }: Props) {
   const router = useRouter();
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'author'>('date');
+  const accountItems = getAccountNavItems(Boolean(user?.id));
 
   const sortedBooks = [...shelf.books].sort((a, b) => {
     switch (sortBy) {
@@ -66,7 +69,14 @@ export default function ShelfPageClient({ shelf, user }: Props) {
 
   return (
     <div className="shelf-page">
-      <div className="shelf-header">
+      <MobileTopBar
+        title={shelf.name}
+        backHref="/profile"
+        showProfileTrigger
+        navItems={primaryMobileNavItems}
+        profileItems={accountItems}
+      />
+      <div className="shelf-header mobile-page-heading">
         <Link href="/" className="back-home">
           ← Back to Home
         </Link>
