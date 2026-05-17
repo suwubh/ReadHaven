@@ -1,5 +1,3 @@
-// app/api/friends/accept/route.ts
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
@@ -48,9 +46,9 @@ export async function POST(request: Request) {
 
     const { friendshipId } = bodyValidation.data;
 
-    // Verify the friendship exists and is pending
     const friendship = await prisma.friendship.findUnique({
       where: { id: friendshipId },
+      select: { friendId: true, status: true },
     });
 
     if (!friendship || friendship.friendId !== session.user.id) {
@@ -67,7 +65,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Accept the friendship
     const updated = await prisma.friendship.update({
       where: { id: friendshipId },
       data: { status: 'accepted' },

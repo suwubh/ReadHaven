@@ -1,5 +1,3 @@
-// app/book/[id]/page.tsx
-
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import BookDetailClient from './BookDetailClient';

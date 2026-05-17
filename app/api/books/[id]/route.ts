@@ -1,5 +1,3 @@
-// app/api/books/[id]/route.ts
-
 import { NextResponse } from 'next/server';
 
 interface Book {
@@ -111,16 +109,11 @@ async function fetchFromGoogle(id: string): Promise<Book | null> {
 
 async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
   try {
-    // Fetch work details
-    const workResponse = await fetch(
-      `https://openlibrary.org/works/${id}.json`
-    );
-    
+    const workResponse = await fetch(`https://openlibrary.org/works/${id}.json`);
     if (!workResponse.ok) return null;
-    
+
     const work = await workResponse.json();
-    
-    // Get description
+
     let description = '';
     if (work.description) {
       description = sanitizeDescription(
@@ -129,40 +122,34 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
           : work.description.value || ''
       );
     }
-    
-    // Get author names
+
     const authorNames: string[] = [];
-    if (work.authors && work.authors.length > 0) {
+    if (Array.isArray(work.authors)) {
       for (const authorRef of work.authors.slice(0, 3)) {
         try {
           const authorKey = authorRef.author?.key || authorRef.key;
-          if (authorKey) {
-            const authorResponse = await fetch(
-              `https://openlibrary.org${authorKey}.json`
-            );
-            if (authorResponse.ok) {
-              const author = await authorResponse.json();
-              authorNames.push(author.name);
-            }
+          if (!authorKey) continue;
+          const authorResponse = await fetch(`https://openlibrary.org${authorKey}.json`);
+          if (authorResponse.ok) {
+            const author = await authorResponse.json();
+            if (author?.name) authorNames.push(author.name);
           }
         } catch {
-          // Skip if author fetch fails
+          continue;
         }
       }
     }
-    
-    // Get cover image
+
     const coverId = work.covers?.[0];
     const coverImage = coverId
       ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
       : '';
-    
-    // Get editions for additional details
+
     let publishedDate = '';
     let publisher = '';
     let pageCount = 0;
     let isbn = '';
-    
+
     try {
       const editionsResponse = await fetch(
         `https://openlibrary.org/works/${id}/editions.json?limit=1`
@@ -170,7 +157,6 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
       if (editionsResponse.ok) {
         const editionsData = await editionsResponse.json();
         const firstEdition = editionsData.entries?.[0];
-        
         if (firstEdition) {
           publishedDate = firstEdition.publish_date || '';
           publisher = firstEdition.publishers?.[0] || '';
@@ -179,10 +165,9 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
         }
       }
     } catch {
-      // Optional
+      // Editions metadata is optional.
     }
-    
-    // Get ratings
+
     let averageRating = 0;
     let ratingsCount = 0;
     try {
@@ -195,7 +180,7 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
         ratingsCount = ratings.summary?.count || 0;
       }
     } catch {
-      // Optional
+      // Ratings metadata is optional.
     }
     
     return {

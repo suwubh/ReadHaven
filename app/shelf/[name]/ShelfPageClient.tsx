@@ -1,5 +1,3 @@
-// app/shelf/[name]/ShelfPageClient.tsx
-
 'use client';
 
 import { useState } from 'react';

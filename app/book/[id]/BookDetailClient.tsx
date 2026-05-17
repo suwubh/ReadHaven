@@ -1,5 +1,3 @@
-// app/book/[id]/BookDetailClient.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -177,11 +175,16 @@ export default function BookDetailClient({
         }),
       });
 
-      if (response.ok) {
-        alert('Review submitted!');
-        setShowReviewForm(false);
-        router.refresh();
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        alert(result?.error || 'Failed to submit review');
+        return;
       }
+
+      alert('Review submitted!');
+      setShowReviewForm(false);
+      router.refresh();
     } catch (error) {
       console.error('Error submitting review:', error);
       alert('Failed to submit review');

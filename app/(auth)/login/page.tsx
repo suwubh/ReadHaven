@@ -1,5 +1,3 @@
-// app/(auth)/login/page.tsx
-
 'use client';
 
 import { Suspense, useState } from 'react';
@@ -38,7 +36,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,7 +46,6 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        rememberMe: rememberMe ? 'true' : 'false',
         redirect: false,
       });
 
@@ -163,21 +159,6 @@ export default function LoginPage() {
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <label className="flex items-center gap-2 text-[#6f5a4a]">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#cbb8a0] text-[#4e342e] focus:ring-[#8b6f47]"
-                />
-                <span>Remember me</span>
-              </label>
-              <Link href="/forgot-password" className="font-semibold text-[#4e342e] transition hover:text-[#2f1f1a]">
-                Forgot password?
-              </Link>
             </div>
 
             <button

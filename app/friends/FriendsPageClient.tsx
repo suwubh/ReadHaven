@@ -1,5 +1,3 @@
-// app/friends/FriendsPageClient.tsx
-
 'use client';
 
 import { useState } from 'react';

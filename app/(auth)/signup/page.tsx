@@ -1,5 +1,3 @@
-// app/(auth)/signup/page.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -29,8 +27,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -171,12 +169,12 @@ export default function SignUpPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
-                  minLength={6}
+                  minLength={8}
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className={`${inputClasses} pr-16`}
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                 />
                 <button
                   type="button"
@@ -198,7 +196,7 @@ export default function SignUpPage() {
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
-                  minLength={6}
+                  minLength={8}
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -271,19 +269,7 @@ export default function SignUpPage() {
             Continue with Google
           </button>
 
-          <p className="mt-6 text-center text-xs text-[#6f5a4a]">
-            By creating an account, you agree to ReadHaven&apos;s{' '}
-            <Link href="/terms" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-
-          <p className="mt-4 text-center text-sm text-[#6f5a4a]">
+          <p className="mt-6 text-center text-sm text-[#6f5a4a]">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-[#4e342e] hover:text-[#2f1f1a]">
               Sign in

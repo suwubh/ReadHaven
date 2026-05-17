@@ -1,5 +1,3 @@
-// app/friends/page.tsx
-
 import type { Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';

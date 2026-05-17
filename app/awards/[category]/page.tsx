@@ -1,5 +1,3 @@
-// app/awards/[category]/page.tsx
-
 import AwardsPageClient from './AwardsPageClient';
 
 interface PageProps {

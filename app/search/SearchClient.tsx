@@ -1,4 +1,3 @@
-// app/search/SearchClient.tsx
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';

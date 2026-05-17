@@ -1,383 +1,146 @@
 # ReadHaven
 
-A modern, full-stack reading management and social platform built with Next.js 16, where book lovers can discover, track, and share their reading journey.
+A reading-tracker web app built with Next.js. Users can search books, organize
+them into shelves, log reviews and ratings, set a yearly reading goal, add
+friends, and share short posts with the community.
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
-![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791)
+> Portfolio project — not deployed publicly. Run locally with the steps below.
 
-## 🌟 Features
+## Tech stack
 
-### 📚 Book Management
-- **Comprehensive Book Search**: Search through millions of books using Google Books and Open Library APIs
-- **Personal Shelves**: Organize books into default shelves (Want to Read, Currently Reading, Read) or create custom collections
-- **Reading Progress**: Track your reading journey with detailed statistics and progress indicators
-- **Book Details**: View comprehensive information including ratings, reviews, descriptions, and metadata
+- **Next.js 16** (App Router, server components, route handlers)
+- **TypeScript**
+- **PostgreSQL** with **Prisma** as the ORM
+- **NextAuth.js** for authentication (email/password, Google, GitHub)
+- **Tailwind CSS** + a few hand-written stylesheets per page
+- **Zod** for request validation
+- External book data: **Google Books API** and **Open Library API**
+- Optional: **Groq API** (LLM) for "Awards" category recommendations
 
-### ⭐ Reviews & Ratings
-- **Rate & Review**: Share your thoughts with 1-5 star ratings and detailed reviews
-- **Edit & Delete**: Manage your reviews with full CRUD functionality
-- **Personal Review Gallery**: View all your reviews in one organized place
+## Features
 
-### 🎯 Reading Goals
-- **Annual Challenges**: Set and track yearly reading goals
-- **Progress Tracking**: Visual progress bars and statistics to keep you motivated
-- **Historical Data**: View past years' achievements and goals
-- **Quick Goal Setting**: Choose from popular goal presets (12, 24, 50, 100 books)
+- **Auth**: sign up with email/password (bcrypt-hashed), or OAuth via Google /
+  GitHub. JWT sessions.
+- **Book search**: queries Google Books and Open Library in parallel, dedupes
+  by title + first author, then ranks by ratings/recency.
+- **Book detail page**: aggregates fields from both sources, sanitizes the
+  description HTML, and shows existing reviews.
+- **Shelves**: every new user gets *Want to Read*, *Currently Reading* and
+  *Read* shelves bootstrapped in a Prisma transaction.
+- **Reviews**: 1–5 star rating with optional text. Editing a review upserts
+  the existing row instead of creating duplicates.
+- **Reading goal**: one yearly goal per user (`@@unique([userId, year])`),
+  with progress shown on the home page.
+- **Friends**: search by email, send / accept / remove requests.
+- **Posts & comments**: short posts (max 2000 chars) optionally attached to a
+  book, with like-toggle and cursor-paginated comments.
+- **Awards section** *(optional)*: asks Groq for 5 book titles in a category,
+  then resolves each through the book search/detail APIs.
 
-### 📊 Reading Statistics
-- **Comprehensive Analytics**: 
-  - Total books read
-  - Books read by year and month
-  - Average ratings and rating distribution
-  - Reading pace and trends
-- **Visual Charts**: Interactive bar charts and progress indicators
-- **Reading Insights**: Discover your most productive months and reading patterns
+## Project layout
 
-### 👥 Social Features
-- **Friend System**: 
-  - Search and connect with friends by email
-  - Send, accept, or decline friend requests
-  - View friends' reading activities
-- **Community Feed**: 
-  - Share thoughts and reviews as posts
-  - Attach books to your posts
-  - Like and comment on posts
-  - Real-time activity feed
-- **Activity Tracking**: See what your friends are reading and reviewing
+```
+app/
+  (auth)/           login & signup pages
+  api/              route handlers (books, reviews, shelves, posts, friends, …)
+  book/             book detail + a /book/resolve helper that finds a book by title+author
+  feed/             social feed and post detail
+  friends/          friends search + request list
+  profile/          profile view and edit
+  reading-challenge/  yearly goal
+  reviews/          all the user's reviews
+  search/           book search page
+  shelf/[name]/     books in a single shelf
+  statistics/       reading stats
+  components/       shared client/server components
+  styles/globals/   per-page stylesheets imported from globals.css
+lib/
+  auth.ts           NextAuth config
+  prisma.ts         Prisma client singleton
+  shelves.ts        default-shelf bootstrap helper
+  shelf-slug.ts     URL slug helpers for shelves
+  validation.ts     pagination + zod helpers
+prisma/
+  schema.prisma     models: User, Post, Like, Comment, Friendship, Activity,
+                    Shelf, ShelfBook, Review, ReadingGoal, plus NextAuth tables
+```
 
-### 🎨 User Experience
-- **Beautiful UI**: Modern, responsive design with gradient themes and smooth animations
-- **Profile Customization**: Edit bio, location, website, and personal information
-- **Quick Navigation**: Intuitive sidebar with shelves, statistics, and quick links
-- **Search Integration**: Instant book search with detailed results
+## Setup
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Styling**: Custom CSS with responsive design
-- **Authentication UI**: NextAuth.js components
-- **Icons**: Font Awesome 5
-
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Next.js API Routes
-- **ORM**: Prisma
-- **Database**: PostgreSQL
-- **Authentication**: NextAuth.js
-  - Credentials provider (email/password)
-  - Google OAuth provider
-
-### External APIs
-- **Google Books API**: Primary book data source
-- **Open Library API**: Secondary book data source with fallback
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed:
-- Node.js (v18 or higher)
-- npm or yarn
-- PostgreSQL (v14 or higher)
-- Git
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
+Requires Node 18+ and a PostgreSQL database (Neon, Supabase, or local).
 
 ```bash
 git clone https://github.com/suwubh/ReadHaven.git
 cd ReadHaven
-```
-
-### 2. Install Dependencies
-
-```bash
 npm install
-# or
-yarn install
 ```
 
-### 3. Environment Setup
-
-Create a `.env` file in the root directory:
+Create `.env` in the project root:
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/readhaven"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?sslmode=require"
 
-# NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_SECRET="<output of: openssl rand -base64 32>"
 
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
+# Optional OAuth providers
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+# Optional — enables the LLM-powered Awards category recommendations
+GROQ_API_KEY=""
 ```
 
-**Generate NEXTAUTH_SECRET:**
-```bash
-openssl rand -base64 32
-```
-
-### 4. Database Setup
-
-Initialize the database and run migrations:
+Then run the migrations and start the dev server:
 
 ```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Run migrations
 npx prisma migrate deploy
-
-# (Optional) Seed the database
-npx prisma db seed
-```
-
-### 5. Run Development Server
-
-```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to see the application.
+App runs at <http://localhost:3000>.
 
-## 📁 Project Structure
+## Useful scripts
 
-```
-ReadHaven/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Authentication pages
-│   │   ├── login/
-│   │   └── signup/
-│   ├── api/                      # API routes
-│   │   ├── auth/                 # NextAuth & registration
-│   │   ├── books/                # Book search & details
-│   │   ├── friends/              # Friend management
-│   │   ├── posts/                # Social posts
-│   │   ├── reading-goal/         # Reading challenges
-│   │   ├── reviews/              # Book reviews
-│   │   ├── shelves/              # Shelf management
-│   │   └── user/                 # User profile
-│   ├── book/[id]/                # Book detail pages
-│   ├── components/               # Reusable components
-│   ├── create-post/              # Post creation
-│   ├── feed/                     # Social feed
-│   ├── friends/                  # Friends page
-│   ├── profile/                  # User profile
-│   ├── reading-challenge/        # Reading goals
-│   ├── reviews/                  # User reviews
-│   ├── search/                   # Book search
-│   ├── shelf/[name]/             # Shelf pages
-│   ├── statistics/               # Reading stats
-│   ├── globals.css               # Global styles
-│   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Home page
-├── lib/                          # Utility libraries
-│   ├── auth.ts                   # NextAuth configuration
-│   └── prisma.ts                 # Prisma client
-├── prisma/                       # Database schema & migrations
-│   ├── migrations/
-│   └── schema.prisma
-├── types/                        # TypeScript type definitions
-├── public/                       # Static assets
-│   └── images/
-├── .env                          # Environment variables
-├── .gitignore
-├── next.config.js
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+- `npm run dev` — Next.js dev server
+- `npm run build` — production build
+- `npm run start` — start the built app
+- `npm run lint` — ESLint (currently warnings only — uses `<img>` for some
+  legacy markup paths)
+- `npx tsc --noEmit` — type check
 
-## 🗄️ Database Schema
+## API surface (summary)
 
-### Core Models
-- **User**: User accounts with authentication
-- **Shelf**: Personal book collections
-- **ShelfBook**: Books in shelves with metadata
-- **Review**: User ratings and reviews
-- **ReadingGoal**: Annual reading challenges
-- **Friendship**: Friend connections
-- **Post**: Social media posts
-- **Like**: Post likes
-- **Comment**: Post comments
-- **Activity**: User activity tracking
+| Method | Path | Notes |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | name, email, password (8–72 bytes) |
+| `GET` | `/api/books/search?q=&page=` | merged Google + Open Library |
+| `GET` | `/api/books/[id]` | merged detail (Google ID or `OL…` ID) |
+| `GET`/`POST`/`DELETE` | `/api/reviews` | list by `bookId`; upsert / delete by id |
+| `POST` | `/api/shelves/add-book` | requires auth; checks shelf ownership |
+| `POST` | `/api/shelves/remove-book` | requires auth |
+| `GET`/`POST` | `/api/reading-goal?year=` | one goal per `(userId, year)` |
+| `GET`/`POST` | `/api/posts` | list recent / create a post |
+| `POST` | `/api/posts/like` | toggle like |
+| `GET`/`POST` | `/api/posts/[id]/comments` | cursor paginated |
+| `GET` | `/api/friends/search?email=` | find a user to friend |
+| `POST` | `/api/friends/request` `/accept` `/remove` | manage friendships |
+| `PATCH` | `/api/user/profile` | name, bio, location, website |
+| `POST` | `/api/awards` | category → LLM → resolved books |
 
-See `prisma/schema.prisma` for the complete schema.
+## Notes & known limitations
 
-## 🔐 Authentication
+- This is a single-developer learning project — there are no automated tests
+  yet. Behaviour is verified manually.
+- The hero / footer / discover sections are static, intentionally — they're
+  the landing UI rather than fully data-backed views.
+- Activity tracking (`Activity` model) is wired in the schema but not yet
+  written by the rest of the app.
+- OAuth callbacks need the corresponding `NEXTAUTH_URL` and provider redirect
+  URIs to match.
 
-ReadHaven supports multiple authentication methods:
+## License
 
-1. **Email/Password**: Traditional credentials-based authentication
-2. **Google OAuth**: Sign in with Google account
-
-New users automatically get three default shelves:
-- Want to Read
-- Currently Reading
-- Read
-
-## 🎨 Key Features Implementation
-
-### Book Search
-- Dual API integration (Google Books + Open Library)
-- Automatic fallback between sources
-- Result merging and deduplication
-- Pagination support
-
-### Shelves System
-- Default and custom shelves
-- Books can exist on multiple shelves
-- Add/remove books with one click
-- Sort by date, title, or author
-
-### Social Feed
-- Create posts with optional book attachments
-- Like and comment functionality
-- Real-time activity updates
-- Friend-based content filtering
-
-### Statistics Dashboard
-- Monthly reading charts
-- Rating distribution graphs
-- Year-over-year comparisons
-- Reading insights and patterns
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Import project to Vercel
-3. Configure environment variables
-4. Deploy
-
-### Environment Variables for Production
-
-```env
-DATABASE_URL="your-production-database-url"
-NEXTAUTH_URL="https://yourdomain.com"
-NEXTAUTH_SECRET="your-production-secret"
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-```
-
-### Database Migration
-
-```bash
-npx prisma migrate deploy
-```
-
-## 📱 Responsive Design
-
-ReadHaven is fully responsive with breakpoints:
-- Mobile: < 480px
-- Tablet: 481px - 768px
-- Desktop: 769px - 1200px
-- Large Desktop: > 1200px
-
-## 🧪 Testing
-
-```bash
-# Run tests (when implemented)
-npm test
-
-# Run type checking
-npx tsc --noEmit
-
-# Lint code
-npm run lint
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Coding Standards
-- Use TypeScript for all new files
-- Follow existing code style and conventions
-- Write meaningful commit messages
-- Add comments for complex logic
-
-## 📝 API Documentation
-
-### Book Search
-```
-GET /api/books/search?q={query}&page={page}
-```
-
-### Book Details
-```
-GET /api/books/{id}
-```
-
-### User Reviews
-```
-GET /api/reviews?bookId={bookId}
-POST /api/reviews
-DELETE /api/reviews
-```
-
-### Reading Goals
-```
-GET /api/reading-goal?year={year}
-POST /api/reading-goal
-```
-
-## 🐛 Known Issues
-
-- Image loading may be slow for books without cached thumbnails
-- Google Books API has rate limits (use with moderation)
-- OAuth requires production domain for full functionality
-
-## 🔮 Future Enhancements
-
-- [ ] Mobile app (React Native)
-- [ ] Book recommendations engine
-- [ ] Reading groups and clubs
-- [ ] Import/export reading data
-- [ ] Goodreads integration
-- [ ] Dark mode
-- [ ] Multi-language support
-- [ ] Book notes and highlights
-- [ ] Reading streaks and achievements
-- [ ] Advanced search filters
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**suwubh**
-- GitHub: [@suwubh](https://github.com/suwubh)
-- Project Link: [https://github.com/suwubh/ReadHaven](https://github.com/suwubh/ReadHaven)
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - The React framework
-- [Prisma](https://www.prisma.io/) - Next-generation ORM
-- [NextAuth.js](https://next-auth.js.org/) - Authentication
-- [Google Books API](https://developers.google.com/books) - Book data
-- [Open Library API](https://openlibrary.org/developers/api) - Additional book data
-- [Font Awesome](https://fontawesome.com/) - Icon library
-
-## 📞 Support
-
-For support, please open an issue in the GitHub repository.
-
----
-
-**Made with ❤️ for book lovers everywhere**
+MIT.

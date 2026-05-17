@@ -1,5 +1,3 @@
-// app/reading-challenge/ReadingChallengeClient.tsx
-
 'use client';
 
 import { useState } from 'react';

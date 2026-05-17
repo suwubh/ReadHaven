@@ -1,5 +1,3 @@
-// app/api/reading-goal/route.ts
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
@@ -77,40 +75,13 @@ export async function POST(request: Request) {
 
     const { year, target } = bodyValidation.data;
 
-    // Check if goal exists for this year
-    const existingGoal = await prisma.readingGoal.findUnique({
-      where: {
-        userId_year: {
-          userId: session.user.id,
-          year,
-        },
-      },
+    const goal = await prisma.readingGoal.upsert({
+      where: { userId_year: { userId: session.user.id, year } },
+      update: { target },
+      create: { userId: session.user.id, year, target },
     });
 
-    let goal;
-
-    if (existingGoal) {
-      // Update existing goal
-      goal = await prisma.readingGoal.update({
-        where: {
-          id: existingGoal.id,
-        },
-        data: {
-          target,
-        },
-      });
-    } else {
-      // Create new goal
-      goal = await prisma.readingGoal.create({
-        data: {
-          userId: session.user.id,
-          year,
-          target,
-        },
-      });
-    }
-
-    return NextResponse.json(goal, { status: 201 });
+    return NextResponse.json(goal);
   } catch (error) {
     console.error('Reading goal error:', error);
     return NextResponse.json(

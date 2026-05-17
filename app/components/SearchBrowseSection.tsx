@@ -1,5 +1,3 @@
-// app/components/SearchBrowseSection.tsx
-
 'use client';
 
 import { useState } from 'react';

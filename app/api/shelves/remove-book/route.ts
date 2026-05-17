@@ -1,5 +1,3 @@
-// app/api/shelves/remove-book/route.ts
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -8,30 +6,23 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { shelfBookId } = body;
+    const body = await request.json().catch(() => null);
+    const shelfBookId =
+      body && typeof (body as { shelfBookId?: unknown }).shelfBookId === 'string'
+        ? (body as { shelfBookId: string }).shelfBookId
+        : null;
 
     if (!shelfBookId) {
-      return NextResponse.json(
-        { error: 'Missing shelf book ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing shelf book ID' }, { status: 400 });
     }
 
-    // Verify the book belongs to a shelf owned by the user
     const shelfBook = await prisma.shelfBook.findUnique({
       where: { id: shelfBookId },
-      include: {
-        shelf: true,
-      },
+      include: { shelf: { select: { userId: true } } },
     });
 
     if (!shelfBook || shelfBook.shelf.userId !== session.user.id) {
@@ -41,15 +32,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Delete the book from the shelf
-    await prisma.shelfBook.delete({
-      where: { id: shelfBookId },
-    });
+    await prisma.shelfBook.delete({ where: { id: shelfBookId } });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Book removed from shelf',
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Remove from shelf error:', error);
     return NextResponse.json(

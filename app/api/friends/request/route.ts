@@ -1,5 +1,3 @@
-// app/api/friends/request/route.ts
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
@@ -55,7 +53,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if friendship already exists
     const existing = await prisma.friendship.findFirst({
       where: {
         OR: [
@@ -63,6 +60,7 @@ export async function POST(request: Request) {
           { userId: friendId, friendId: session.user.id },
         ],
       },
+      select: { id: true },
     });
 
     if (existing) {
@@ -72,7 +70,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create friendship request
     const friendship = await prisma.friendship.create({
       data: {
         userId: session.user.id,

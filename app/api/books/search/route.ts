@@ -1,5 +1,3 @@
-// app/api/books/search/route.ts
-
 import { NextResponse } from 'next/server';
 import { parseBoundedInt } from '@/lib/validation';
 
@@ -108,41 +106,32 @@ export async function GET(request: Request) {
       );
     }
 
-    // Search both APIs in parallel
     const [openLibraryBooks, googleBooks] = await Promise.all([
       searchOpenLibrary(query, offset, limit),
       searchGoogleBooks(query, offset, limit),
     ]);
 
-    // Combine and deduplicate results
     const allBooks = [...(openLibraryBooks || []), ...(googleBooks || [])];
-    
-    // Remove duplicates based on title and author similarity
+
     const uniqueBooks = allBooks.filter((book, index, self) => {
-      return index === self.findIndex((b) => 
+      return index === self.findIndex((b) =>
         b.title.toLowerCase() === book.title.toLowerCase() &&
         b.authors[0]?.toLowerCase() === book.authors[0]?.toLowerCase()
       );
     });
 
-    // Sort by rating and recency
     const sortedBooks = uniqueBooks.sort((a, b) => {
-      // Prioritize books with ratings
       if (a.ratingsCount > 0 && b.ratingsCount === 0) return -1;
       if (b.ratingsCount > 0 && a.ratingsCount === 0) return 1;
-      
-      // Then by rating
       if (a.averageRating !== b.averageRating) {
         return b.averageRating - a.averageRating;
       }
-      
-      // Then by publish date
       return (b.publishedDate || '0') > (a.publishedDate || '0') ? 1 : -1;
     });
 
-    const books = sortedBooks.slice(0, limit).map(book => ({
+    const books = sortedBooks.slice(0, limit).map((book) => ({
       ...book,
-      description: '', // Will be fetched on detail page
+      description: '',
       pageCount: 0,
       language: 'en',
     }));

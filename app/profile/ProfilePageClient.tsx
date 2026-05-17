@@ -1,5 +1,3 @@
-// app/profile/ProfilePageClient.tsx
-
 'use client';
 
 import { useState } from 'react';

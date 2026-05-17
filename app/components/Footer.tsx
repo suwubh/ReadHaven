@@ -1,72 +1,35 @@
-interface FooterLinkProps {
-  href: string;
-  children: React.ReactNode;
-}
-
-function FooterLink({ href, children }: FooterLinkProps) {
-  return (
-    <li>
-      <a href={href}>{children}</a>
-    </li>
-  );
-}
+import Link from 'next/link';
 
 export default function Footer() {
   return (
     <footer className="footer-section">
       <div className="footer-container">
         <div className="footer-column">
-          <h4>ABOUT</h4>
+          <h4>READHAVEN</h4>
+          <p>
+            A personal reading tracker. Search books, build shelves,
+            log reviews, and share posts with friends.
+          </p>
+        </div>
+
+        <div className="footer-column">
+          <h4>EXPLORE</h4>
           <ul>
-            <FooterLink href="#">About Us</FooterLink>
-            <FooterLink href="#">Careers</FooterLink>
-            <FooterLink href="#">Authors & ads blog</FooterLink>
-            <FooterLink href="#">API</FooterLink>
+            <li><Link href="/search">Search books</Link></li>
+            <li><Link href="/feed">Community feed</Link></li>
+            <li><Link href="/reading-challenge">Reading challenge</Link></li>
           </ul>
         </div>
 
         <div className="footer-column">
-          <h4>CONNECT</h4>
-          <ul className="social-icons">
-            <li>
-              <a href="#" aria-label="Facebook">
-                <i className="fab fa-facebook-f"></i>
-              </a>
-            </li>
-            <li>
-              <a href="#" aria-label="Twitter">
-                <i className="fab fa-twitter"></i>
-              </a>
-            </li>
-            <li>
-              <a href="#" aria-label="Instagram">
-                <i className="fab fa-instagram"></i>
-              </a>
-            </li>
-            <li>
-              <a href="#" aria-label="LinkedIn">
-                <i className="fab fa-linkedin-in"></i>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div className="footer-column">
-          <ul className="app-buttons">
-            <li>
-              <a href="#">
-                <img src="/images/appstore.png" alt="Download on App Store" />
-              </a>
-            </li>
-            <li>
-              <a href="#">
-                <img src="/images/googleplay.png" alt="Get it on Google Play" />
-              </a>
-            </li>
+          <h4>BUILT WITH</h4>
+          <ul>
+            <li>Next.js, TypeScript, Prisma</li>
+            <li>PostgreSQL, NextAuth.js</li>
+            <li>Google Books &amp; Open Library APIs</li>
           </ul>
           <p>
-            &copy; 2024 ReadHaven, Inc. <br />
-            Mobile version
+            &copy; {new Date().getFullYear()} ReadHaven
           </p>
         </div>
       </div>

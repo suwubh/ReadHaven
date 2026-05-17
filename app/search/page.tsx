@@ -1,4 +1,3 @@
-// app/search/page.tsx
 import { Suspense } from 'react';
 import SearchClient from './SearchClient';
 

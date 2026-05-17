@@ -1,98 +1,90 @@
-// app/api/reviews/route.ts
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { parsePagination } from '@/lib/validation';
 
+const MAX_REVIEW_LENGTH = 4000;
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { bookId, rating, content } = body;
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
 
-    if (!bookId || !rating) {
+    const { bookId, rating, content } = body as {
+      bookId?: unknown;
+      rating?: unknown;
+      content?: unknown;
+    };
+
+    if (typeof bookId !== 'string' || !bookId.trim()) {
+      return NextResponse.json({ error: 'Book ID is required' }, { status: 400 });
+    }
+
+    if (typeof rating !== 'number' || !Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Rating must be an integer between 1 and 5' },
         { status: 400 }
       );
     }
 
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
-      );
+    let reviewContent: string | null = null;
+    if (typeof content === 'string') {
+      const trimmed = content.trim();
+      if (trimmed.length > MAX_REVIEW_LENGTH) {
+        return NextResponse.json(
+          { error: `Review must be ${MAX_REVIEW_LENGTH} characters or fewer` },
+          { status: 400 }
+        );
+      }
+      reviewContent = trimmed || null;
     }
 
-    // Check if user already has a review for this book
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        userId: session.user.id,
-        bookId,
-      },
+    const trimmedBookId = bookId.trim();
+    const existing = await prisma.review.findFirst({
+      where: { userId: session.user.id, bookId: trimmedBookId },
+      select: { id: true },
     });
 
-    let review;
+    const review = existing
+      ? await prisma.review.update({
+          where: { id: existing.id },
+          data: { rating, content: reviewContent },
+        })
+      : await prisma.review.create({
+          data: {
+            userId: session.user.id,
+            bookId: trimmedBookId,
+            rating,
+            content: reviewContent,
+          },
+        });
 
-    if (existingReview) {
-      // Update existing review
-      review = await prisma.review.update({
-        where: {
-          id: existingReview.id,
-        },
-        data: {
-          rating,
-          content,
-        },
-      });
-    } else {
-      // Create new review
-      review = await prisma.review.create({
-        data: {
-          userId: session.user.id,
-          bookId,
-          rating,
-          content,
-        },
-      });
-    }
-
-    return NextResponse.json(review, { status: 201 });
+    return NextResponse.json(review, { status: existing ? 200 : 201 });
   } catch (error) {
     console.error('Review error:', error);
-    return NextResponse.json(
-      { error: 'Failed to submit review' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 });
   }
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const rawBookId = searchParams.get('bookId');
-    const bookId = rawBookId?.trim();
+    const bookId = searchParams.get('bookId')?.trim();
     const { page, pageSize, skip, take } = parsePagination(searchParams, {
-      defaultPage: 1,
       defaultPageSize: 20,
       maxPageSize: 50,
     });
 
     if (!bookId) {
-      return NextResponse.json(
-        { error: 'Book ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Book ID is required' }, { status: 400 });
     }
 
     const where = { bookId };
@@ -100,17 +92,9 @@ export async function GET(request: Request) {
       prisma.review.findMany({
         where,
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
+          user: { select: { id: true, name: true, image: true } },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
         skip,
         take,
       }),
@@ -126,37 +110,30 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Fetch reviews error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch reviews' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { reviewId } = body;
+    const body = await request.json().catch(() => null);
+    const reviewId =
+      body && typeof body === 'object' && typeof (body as { reviewId?: unknown }).reviewId === 'string'
+        ? (body as { reviewId: string }).reviewId
+        : null;
 
     if (!reviewId) {
-      return NextResponse.json(
-        { error: 'Review ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Review ID is required' }, { status: 400 });
     }
 
-    // Verify the review belongs to the user
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
+      select: { id: true, userId: true },
     });
 
     if (!review || review.userId !== session.user.id) {
@@ -166,20 +143,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete the review
-    await prisma.review.delete({
-      where: { id: reviewId },
-    });
+    await prisma.review.delete({ where: { id: reviewId } });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Review deleted',
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Delete review error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete review' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete review' }, { status: 500 });
   }
 }

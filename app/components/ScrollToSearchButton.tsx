@@ -1,5 +1,3 @@
-// app/components/ScrollToSearchButton.tsx
-
 'use client';
 
 export default function ScrollToSearchButton() {

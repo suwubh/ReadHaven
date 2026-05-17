@@ -1,5 +1,3 @@
-// app/create-post/CreatePostClient.tsx
-
 'use client';
 
 import { useState } from 'react';

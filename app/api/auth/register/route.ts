@@ -1,5 +1,3 @@
-// app/api/auth/register/route.ts
-
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -29,14 +27,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findFirst({
-      where: {
-        email: {
-          equals: email,
-          mode: 'insensitive',
-        },
-      },
+      where: { email: { equals: email, mode: 'insensitive' } },
       select: { id: true },
     });
 
@@ -47,37 +39,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.$transaction(async (tx) => {
-      // Create user and bootstrap default shelves atomically.
       const createdUser = await tx.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-        },
+        data: { name, email, password: hashedPassword },
       });
 
       await tx.shelf.createMany({
-        data: [
-          {
-            name: 'Want to Read',
-            userId: createdUser.id,
-            isDefault: true,
-          },
-          {
-            name: 'Currently Reading',
-            userId: createdUser.id,
-            isDefault: true,
-          },
-          {
-            name: 'Read',
-            userId: createdUser.id,
-            isDefault: true,
-          },
-        ],
+        data: ['Want to Read', 'Currently Reading', 'Read'].map((name) => ({
+          name,
+          userId: createdUser.id,
+          isDefault: true,
+        })),
       });
 
       return createdUser;
