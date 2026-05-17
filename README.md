@@ -4,7 +4,6 @@ A reading-tracker web app built with Next.js. Users can search books, organize
 them into shelves, log reviews and ratings, set a yearly reading goal, add
 friends, and share short posts with the community.
 
-> Portfolio project — not deployed publicly. Run locally with the steps below.
 
 ## Tech stack
 
