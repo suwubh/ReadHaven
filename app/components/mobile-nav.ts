@@ -8,6 +8,7 @@ export interface MobileNavItem {
 export const primaryMobileNavItems: MobileNavItem[] = [
   { href: '/', label: 'Home', icon: 'fas fa-home', matchMode: 'exact' },
   { href: '/search', label: 'Search', icon: 'fas fa-search', matchMode: 'prefix' },
+  { href: '/discover', label: 'Discover', icon: 'fas fa-compass', matchMode: 'prefix' },
   { href: '/feed', label: 'Feed', icon: 'fas fa-rss', matchMode: 'prefix' },
   { href: '/reviews', label: 'Reviews', icon: 'fas fa-star', matchMode: 'prefix' },
   { href: '/friends', label: 'Friends', icon: 'fas fa-users', matchMode: 'prefix' },

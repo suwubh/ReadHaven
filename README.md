@@ -1,20 +1,26 @@
 # ReadHaven
 
-A reading-tracker web app built with Next.js. Users can search books, organize
-them into shelves, log reviews and ratings, set a yearly reading goal, add
-friends, and share short posts with the community.
+A social reading tracker built with Next.js. Users search books, organize them
+into shelves, log reviews and ratings, set a yearly reading goal, add friends,
+share short posts, and discover new titles via vector similarity over a
+locally-seeded book catalogue.
 
+Live demo: https://read-haven-sandy.vercel.app
 
 ## Tech stack
 
 - **Next.js 16** (App Router, server components, route handlers)
 - **TypeScript**
-- **PostgreSQL** with **Prisma** as the ORM
-- **NextAuth.js** for authentication (email/password, Google, GitHub)
-- **Tailwind CSS** + a few hand-written stylesheets per page
+- **PostgreSQL** with the **pgvector** extension, via **Prisma**
+- **NextAuth.js** for auth (email/password, Google, GitHub)
+- **Tailwind CSS v4** + a few hand-written per-page stylesheets
 - **Zod** for request validation
-- External book data: **Google Books API** and **Open Library API**
-- Optional: **Groq API** (LLM) for "Awards" category recommendations
+- **@xenova/transformers** running `Xenova/all-MiniLM-L6-v2` locally for
+  384-dim sentence embeddings (no external embedding API needed)
+- Book data: **Open Library** + **Google Books**
+- **Jest** + ts-jest for the API tests
+- **GitHub Actions** for CI
+- Optional: **Groq API** for the "Awards" category recommendations
 
 ## Features
 
@@ -22,17 +28,18 @@ friends, and share short posts with the community.
   GitHub. JWT sessions.
 - **Book search**: queries Google Books and Open Library in parallel, dedupes
   by title + first author, then ranks by ratings/recency.
-- **Book detail page**: aggregates fields from both sources, sanitizes the
-  description HTML, and shows existing reviews.
+- **Book detail**: aggregates fields from both sources, sanitizes the
+  description HTML, shows existing reviews, and includes a "More like this"
+  row driven by the local catalogue's embeddings.
 - **Shelves**: every new user gets *Want to Read*, *Currently Reading* and
   *Read* shelves bootstrapped in a Prisma transaction.
-- **Reviews**: 1–5 star rating with optional text. Editing a review upserts
-  the existing row instead of creating duplicates.
-- **Reading goal**: one yearly goal per user (`@@unique([userId, year])`),
-  with progress shown on the home page.
+- **Reviews**: 1–5 star rating with optional text. Editing upserts.
+- **Reading goal**: one yearly goal per user (`@@unique([userId, year])`).
 - **Friends**: search by email, send / accept / remove requests.
 - **Posts & comments**: short posts (max 2000 chars) optionally attached to a
   book, with like-toggle and cursor-paginated comments.
+- **Discover** page (`/discover`): free-text semantic search over the local
+  book catalogue. Backed by pgvector cosine-distance with an ivfflat index.
 - **Awards section** *(optional)*: asks Groq for 5 book titles in a category,
   then resolves each through the book search/detail APIs.
 
@@ -40,33 +47,36 @@ friends, and share short posts with the community.
 
 ```
 app/
-  (auth)/           login & signup pages
-  api/              route handlers (books, reviews, shelves, posts, friends, …)
-  book/             book detail + a /book/resolve helper that finds a book by title+author
-  feed/             social feed and post detail
-  friends/          friends search + request list
-  profile/          profile view and edit
-  reading-challenge/  yearly goal
-  reviews/          all the user's reviews
-  search/           book search page
-  shelf/[name]/     books in a single shelf
-  statistics/       reading stats
-  components/       shared client/server components
-  styles/globals/   per-page stylesheets imported from globals.css
+  (auth)/                login & signup
+  api/                   route handlers
+  book/                  detail + /book/resolve helper
+  discover/              semantic search page
+  feed/ friends/ ...     social pages
+  layout.tsx             metadata, OG, theme color
+  robots.ts              robots.txt generator
+  sitemap.ts             static + book-detail sitemap
 lib/
-  auth.ts           NextAuth config
-  prisma.ts         Prisma client singleton
-  shelves.ts        default-shelf bootstrap helper
-  shelf-slug.ts     URL slug helpers for shelves
-  validation.ts     pagination + zod helpers
+  auth.ts                NextAuth config
+  prisma.ts              Prisma client singleton
+  embeddings.ts          local sentence-embedding pipeline
+  recommendations.ts     pgvector cosine-distance queries
+  shelves.ts             default-shelf bootstrap helper
+  shelf-slug.ts          URL slug helpers for shelves
+  validation.ts          pagination + Zod helpers
 prisma/
-  schema.prisma     models: User, Post, Like, Comment, Friendship, Activity,
-                    Shelf, ShelfBook, Review, ReadingGoal, plus NextAuth tables
+  schema.prisma          models incl. Book + vector(384) embedding
+  migrations/            includes the pgvector + ivfflat + composite-index migration
+scripts/
+  seed-books.ts          one-shot seeder from Open Library
+  backfill-embeddings.ts one-shot embedding backfill
+__tests__/               Jest API tests
+.github/workflows/ci.yml lint, typecheck, jest, build
 ```
 
 ## Setup
 
-Requires Node 18+ and a PostgreSQL database (Neon, Supabase, or local).
+Requires Node 20+ and Postgres with the pgvector extension. Neon, Supabase,
+and `pgvector/pgvector` Docker images all work.
 
 ```bash
 git clone https://github.com/suwubh/ReadHaven.git
@@ -82,6 +92,9 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?sslmode=require"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="<output of: openssl rand -base64 32>"
 
+# Used by app/robots.ts, app/sitemap.ts, app/layout.tsx for OG URLs.
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+
 # Optional OAuth providers
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
@@ -92,25 +105,41 @@ GITHUB_CLIENT_SECRET=""
 GROQ_API_KEY=""
 ```
 
-Then run the migrations and start the dev server:
+Apply migrations (this also creates the `vector` extension and the `books`
+table + `ivfflat` embedding index):
 
 ```bash
 npx prisma migrate deploy
+```
+
+Seed the book catalogue and backfill embeddings:
+
+```bash
+npm run seed:books        # pulls ~6k books from Open Library
+npm run seed:embeddings   # embeds each book locally; first run downloads ~25 MB ONNX model
+```
+
+Then:
+
+```bash
 npm run dev
 ```
 
 App runs at <http://localhost:3000>.
 
-## Useful scripts
+## Scripts
 
 - `npm run dev` — Next.js dev server
 - `npm run build` — production build
 - `npm run start` — start the built app
-- `npm run lint` — ESLint (currently warnings only — uses `<img>` for some
-  legacy markup paths)
-- `npx tsc --noEmit` — type check
+- `npm run lint` — ESLint (warnings only)
+- `npm run typecheck` — `tsc --noEmit`
+- `npm test` — Jest
+- `npm run test:coverage` — Jest with HTML + lcov coverage into `coverage/`
+- `npm run seed:books` — pull books from Open Library into the local catalogue
+- `npm run seed:embeddings` — embed every book without an embedding (idempotent)
 
-## API surface (summary)
+## API surface
 
 | Method | Path | Notes |
 | --- | --- | --- |
@@ -128,17 +157,17 @@ App runs at <http://localhost:3000>.
 | `POST` | `/api/friends/request` `/accept` `/remove` | manage friendships |
 | `PATCH` | `/api/user/profile` | name, bio, location, website |
 | `POST` | `/api/awards` | category → LLM → resolved books |
+| `GET` | `/api/recommendations?bookId=` | books similar to one |
+| `GET` | `/api/recommendations?q=` | semantic search over the catalogue |
+| `GET` | `/api/recommendations` (auth) | personalised: nearest neighbours to the user's *Read*-shelf centroid |
 
 ## Notes & known limitations
 
-- This is a single-developer learning project — there are no automated tests
-  yet. Behaviour is verified manually.
-- The hero / footer / discover sections are static, intentionally — they're
-  the landing UI rather than fully data-backed views.
-- Activity tracking (`Activity` model) is wired in the schema but not yet
-  written by the rest of the app.
 - OAuth callbacks need the corresponding `NEXTAUTH_URL` and provider redirect
   URIs to match.
+- `Activity` model is wired in the schema but not yet written by the app.
+- `<img>` is still used in a few legacy components instead of `next/image` —
+  these surface as ESLint warnings.
 
 ## License
 

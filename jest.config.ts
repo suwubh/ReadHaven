@@ -1,0 +1,44 @@
+import type { Config } from 'jest';
+
+const config: Config = {
+  testEnvironment: 'node',
+  testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          module: 'commonjs',
+          moduleResolution: 'node',
+          jsx: 'react-jsx',
+          esModuleInterop: true,
+          allowJs: true,
+          isolatedModules: true,
+          target: 'ES2020',
+          paths: { '@/*': ['./*'] },
+        },
+        diagnostics: false,
+      },
+    ],
+  },
+  collectCoverageFrom: [
+    'app/api/**/*.ts',
+    'lib/**/*.ts',
+    '!**/*.d.ts',
+    '!lib/embeddings.ts',
+    '!lib/recommendations.ts',
+    '!lib/prisma.ts',
+    '!lib/auth.ts',
+  ],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/app/api/auth/\\[\\.\\.\\.nextauth\\]/',
+  ],
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageDirectory: 'coverage',
+};
+
+export default config;

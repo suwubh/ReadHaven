@@ -16,6 +16,7 @@ export default function Footer() {
           <h4>EXPLORE</h4>
           <ul>
             <li><Link href="/search">Search books</Link></li>
+            <li><Link href="/discover">Discover (semantic)</Link></li>
             <li><Link href="/feed">Community feed</Link></li>
             <li><Link href="/reading-challenge">Reading challenge</Link></li>
           </ul>

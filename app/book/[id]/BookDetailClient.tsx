@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Session } from 'next-auth';
 import MobileTopBar from '../../components/MobileTopBar';
+import SimilarBooks from '../../components/SimilarBooks';
 import { getAccountNavItems, primaryMobileNavItems } from '../../components/mobile-nav';
 
 interface Book {
@@ -424,6 +425,8 @@ export default function BookDetailClient({
           {safeDescription || 'No description available.'}
         </p>
       </div>
+
+      <SimilarBooks query={`${book.title} ${book.authors[0] ?? ''}`.trim()} />
     </div>
   );
 }
