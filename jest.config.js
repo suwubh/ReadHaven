@@ -1,6 +1,5 @@
-import type { Config } from 'jest';
-
-const config: Config = {
+/** @type {import('jest').Config} */
+module.exports = {
   testEnvironment: 'node',
   testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
   moduleNameMapper: {
@@ -40,5 +39,3 @@ const config: Config = {
   coverageReporters: ['text', 'lcov', 'html'],
   coverageDirectory: 'coverage',
 };
-
-export default config;

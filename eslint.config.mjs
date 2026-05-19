@@ -16,7 +16,6 @@ const eslintConfig = defineConfig([
     files: [
       "__tests__/**/*.{ts,tsx}",
       "scripts/**/*.{ts,tsx}",
-      "jest.config.ts",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

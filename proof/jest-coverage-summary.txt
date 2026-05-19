@@ -1,0 +1,15 @@
+﻿PASS __tests__/api/user/profile.test.ts
+PASS __tests__/lib/shelves.test.ts
+
+=============================== Coverage summary ===============================
+Statements   : 87.32% ( 668/765 )
+Branches     : 69.04% ( 426/617 )
+Functions    : 88.6% ( 70/79 )
+Lines        : 90.01% ( 649/721 )
+================================================================================
+
+Test Suites: 15 passed, 15 total
+Tests:       118 passed, 118 total
+Snapshots:   0 total
+Time:        2.477 s
+Ran all test suites.
