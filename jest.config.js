@@ -35,6 +35,6 @@ module.exports = {
     '/node_modules/',
     '/app/api/auth/\\[\\.\\.\\.nextauth\\]/',
   ],
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'text-summary', 'lcov', 'html'],
   coverageDirectory: 'coverage',
 };
