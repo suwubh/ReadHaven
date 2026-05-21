@@ -137,7 +137,8 @@ App runs at <http://localhost:3000>.
 - `npm test` — Jest
 - `npm run test:coverage` — Jest with HTML + lcov coverage into `coverage/`
 - `npm run seed:books` — pull books from Open Library into the local catalogue
-- `npm run seed:embeddings` — embed every book without an embedding (idempotent)
+- `npm run seed:embeddings` — embed every book without an embedding, then
+  (re)build the pgvector `ivfflat` index over the populated data (idempotent)
 
 ## API surface
 
@@ -156,18 +157,17 @@ App runs at <http://localhost:3000>.
 | `GET` | `/api/friends/search?email=` | find a user to friend |
 | `POST` | `/api/friends/request` `/accept` `/remove` | manage friendships |
 | `PATCH` | `/api/user/profile` | name, bio, location, website |
-| `POST` | `/api/awards` | category → LLM → resolved books |
-| `GET` | `/api/recommendations?bookId=` | books similar to one |
+| `POST` | `/api/awards` | category → LLM → resolved books (rate limited) |
 | `GET` | `/api/recommendations?q=` | semantic search over the catalogue |
-| `GET` | `/api/recommendations` (auth) | personalised: nearest neighbours to the user's *Read*-shelf centroid |
 
 ## Notes & known limitations
 
 - OAuth callbacks need the corresponding `NEXTAUTH_URL` and provider redirect
   URIs to match.
-- `Activity` model is wired in the schema but not yet written by the app.
-- `<img>` is still used in a few legacy components instead of `next/image` —
-  these surface as ESLint warnings.
+- The friends activity feed is populated from `added_book` events; review and
+  challenge events are not tracked yet.
+- `<img>` is still used in a few components instead of `next/image` — these
+  surface as ESLint warnings.
 
 ## License
 

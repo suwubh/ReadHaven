@@ -1,6 +1,7 @@
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }));
 jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 jest.mock('@/lib/shelves', () => ({ ensureDefaultShelves: jest.fn() }));
+jest.mock('@/lib/activity', () => ({ recordActivity: jest.fn() }));
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     shelf: { findFirst: jest.fn() },

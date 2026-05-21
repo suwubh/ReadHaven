@@ -158,26 +158,30 @@ export default function ReviewsPageClient({ reviews }: Props) {
         <div className="reviews-list">
           {reviews.map((review) => {
             const book = bookData[review.bookId];
-            if (!book) return null;
+            const title = book?.title || 'Book details unavailable';
+            const authors = book?.authors?.length
+              ? book.authors.join(', ')
+              : 'Unknown author';
+            const thumbnail = book?.thumbnail || '/images/no-cover.svg';
 
             return (
               <div key={review.id} className="review-card">
                 <Link href={`/book/${review.bookId}`} className="review-book-cover">
                   <img
-                    src={book.thumbnail}
-                    alt={book.title}
+                    src={thumbnail}
+                    alt={title}
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/images/no-cover.jpg';
+                      (e.target as HTMLImageElement).src = '/images/no-cover.svg';
                     }}
                   />
                 </Link>
 
                 <div className="review-content">
                   <Link href={`/book/${review.bookId}`} className="review-book-title">
-                    {book.title}
+                    {title}
                   </Link>
                   <p className="review-book-authors">
-                    by {book.authors.join(', ')}
+                    by {authors}
                   </p>
 
                   <div className="review-rating">

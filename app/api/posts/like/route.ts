@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -30,9 +31,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ liked: false });
     }
 
-    await prisma.like.create({
-      data: { userId: session.user.id, postId },
-    });
+    try {
+      await prisma.like.create({
+        data: { userId: session.user.id, postId },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // A concurrent request created the like first — treat as already liked.
+        if (error.code === 'P2002') {
+          return NextResponse.json({ liked: true });
+        }
+        // postId does not reference a real post.
+        if (error.code === 'P2003') {
+          return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+        }
+      }
+      throw error;
+    }
+
     return NextResponse.json({ liked: true });
   } catch (error) {
     console.error('Like error:', error);

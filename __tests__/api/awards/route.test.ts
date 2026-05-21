@@ -1,3 +1,7 @@
+jest.mock('@/lib/rate-limit', () => ({
+  rateLimit: () => ({ ok: true, retryAfter: 0 }),
+}));
+
 import { POST } from '@/app/api/awards/route';
 import { mockRequest } from '../../helpers';
 

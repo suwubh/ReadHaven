@@ -38,7 +38,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { updatedAt: 'desc' },
     });
     bookEntries = books.map((book) => ({
-      url: `${siteUrl}/book/${encodeURIComponent(book.externalId)}`,
+      // externalId is stored as "/works/OL…W"; the book detail route expects
+      // the bare "OL…W" form.
+      url: `${siteUrl}/book/${encodeURIComponent(
+        book.externalId.replace(/^\/works\//, '')
+      )}`,
       lastModified: book.updatedAt,
       changeFrequency: 'monthly',
       priority: 0.4,

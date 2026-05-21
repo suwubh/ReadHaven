@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { parseBoundedInt } from '@/lib/validation';
 
 const MAX_COMMENT_LENGTH = 2000;
 const DEFAULT_PAGE_SIZE = 20;
@@ -20,12 +21,12 @@ export async function GET(
   try {
     const { id: postId } = await params;
     const { searchParams } = new URL(request.url);
-    const limitParam = Number.parseInt(searchParams.get('limit') ?? '', 10);
     const cursor = searchParams.get('cursor');
-
-    const take = Number.isNaN(limitParam)
-      ? DEFAULT_PAGE_SIZE
-      : Math.min(Math.max(limitParam, 1), MAX_PAGE_SIZE);
+    const take = parseBoundedInt(searchParams.get('limit'), {
+      defaultValue: DEFAULT_PAGE_SIZE,
+      min: 1,
+      max: MAX_PAGE_SIZE,
+    });
 
     const comments = await prisma.comment.findMany({
       where: { postId },
@@ -75,7 +76,7 @@ export async function POST(
     }
 
     const { id: postId } = await params;
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
     const content =
       typeof body?.content === 'string' ? body.content.trim() : '';
 

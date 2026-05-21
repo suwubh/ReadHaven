@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Session } from 'next-auth';
-import { shelfNameToLegacySlug, shelfNameToSlug } from '@/lib/shelf-slug';
+import { shelfNameToSlug } from '@/lib/shelf-slug';
 import MobileTopBar from '../components/MobileTopBar';
 import { getAccountNavItems, primaryMobileNavItems } from '../components/mobile-nav';
 
@@ -43,6 +43,7 @@ interface ProfileData {
   user: User | null;
   totalBooks: number;
   totalReviews: number;
+  friendsCount: number;
   shelves: Shelf[];
   recentReviews: Review[];
   currentYearGoal: ReadingGoal | null;
@@ -264,7 +265,7 @@ export default function ProfilePageClient({ data, session }: Props) {
             </div>
             <div className="stat-card">
               <i className="fas fa-users"></i>
-              <div className="stat-number">0</div>
+              <div className="stat-number">{data.friendsCount}</div>
               <div className="stat-label">Friends</div>
             </div>
           </div>
@@ -275,11 +276,7 @@ export default function ProfilePageClient({ data, session }: Props) {
               {data.shelves.map((shelf) => {
                 const safeName = (shelf.name ?? '').trim();
                 const displayName = safeName || 'Untitled Shelf';
-                const slug = safeName
-                  ? shelfNameToSlug(safeName) ||
-                    shelfNameToLegacySlug(safeName) ||
-                    'untitled-shelf'
-                  : 'untitled-shelf';
+                const slug = shelfNameToSlug(safeName) || 'untitled-shelf';
 
                 return (
                 <Link

@@ -8,7 +8,7 @@ import { ensureDefaultShelves } from '@/lib/shelves';
 async function getUserProfileData(userId: string) {
   await ensureDefaultShelves(userId);
 
-  const [user, shelves, reviews, readingGoals] = await Promise.all([
+  const [user, shelves, reviews, readingGoals, friendsCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -37,6 +37,12 @@ async function getUserProfileData(userId: string) {
       where: { userId },
       orderBy: { year: 'desc' },
     }),
+    prisma.friendship.count({
+      where: {
+        status: 'accepted',
+        OR: [{ userId }, { friendId: userId }],
+      },
+    }),
   ]);
 
   const totalBooks = shelves.reduce((sum, shelf) => sum + shelf.books.length, 0);
@@ -47,6 +53,7 @@ async function getUserProfileData(userId: string) {
     user,
     totalBooks,
     totalReviews: reviews.length,
+    friendsCount,
     shelves,
     recentReviews: reviews,
     currentYearGoal,

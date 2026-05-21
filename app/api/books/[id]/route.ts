@@ -21,6 +21,9 @@ interface Book {
   source?: 'google' | 'openlibrary';
 }
 
+// Book metadata rarely changes, so upstream responses are cached for a day.
+const UPSTREAM_REVALIDATE = 60 * 60 * 24;
+
 function decodeHtmlEntities(value: string) {
   return value.replace(
     /&(#x?[0-9a-fA-F]+|amp|quot|apos|lt|gt|nbsp);/g,
@@ -72,13 +75,14 @@ function sanitizeDescription(rawDescription: unknown) {
 async function fetchFromGoogle(id: string): Promise<Book | null> {
   try {
     const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes/${id}`
+      `https://www.googleapis.com/books/v1/volumes/${id}`,
+      { next: { revalidate: UPSTREAM_REVALIDATE } }
     );
-    
+
     if (!response.ok) return null;
-    
+
     const item = await response.json();
-    
+
     return {
       id: item.id,
       title: item.volumeInfo?.title || '',
@@ -91,7 +95,7 @@ async function fetchFromGoogle(id: string): Promise<Book | null> {
       categories: item.volumeInfo?.categories || [],
       averageRating: item.volumeInfo?.averageRating || 0,
       ratingsCount: item.volumeInfo?.ratingsCount || 0,
-      thumbnail: item.volumeInfo?.imageLinks?.thumbnail || 
+      thumbnail: item.volumeInfo?.imageLinks?.thumbnail ||
                  item.volumeInfo?.imageLinks?.smallThumbnail || '',
       coverImage: item.volumeInfo?.imageLinks?.large ||
                   item.volumeInfo?.imageLinks?.medium ||
@@ -109,7 +113,9 @@ async function fetchFromGoogle(id: string): Promise<Book | null> {
 
 async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
   try {
-    const workResponse = await fetch(`https://openlibrary.org/works/${id}.json`);
+    const workResponse = await fetch(`https://openlibrary.org/works/${id}.json`, {
+      next: { revalidate: UPSTREAM_REVALIDATE },
+    });
     if (!workResponse.ok) return null;
 
     const work = await workResponse.json();
@@ -129,7 +135,10 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
         try {
           const authorKey = authorRef.author?.key || authorRef.key;
           if (!authorKey) continue;
-          const authorResponse = await fetch(`https://openlibrary.org${authorKey}.json`);
+          const authorResponse = await fetch(
+            `https://openlibrary.org${authorKey}.json`,
+            { next: { revalidate: UPSTREAM_REVALIDATE } }
+          );
           if (authorResponse.ok) {
             const author = await authorResponse.json();
             if (author?.name) authorNames.push(author.name);
@@ -152,7 +161,8 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
 
     try {
       const editionsResponse = await fetch(
-        `https://openlibrary.org/works/${id}/editions.json?limit=1`
+        `https://openlibrary.org/works/${id}/editions.json?limit=1`,
+        { next: { revalidate: UPSTREAM_REVALIDATE } }
       );
       if (editionsResponse.ok) {
         const editionsData = await editionsResponse.json();
@@ -172,7 +182,8 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
     let ratingsCount = 0;
     try {
       const ratingsResponse = await fetch(
-        `https://openlibrary.org/works/${id}/ratings.json`
+        `https://openlibrary.org/works/${id}/ratings.json`,
+        { next: { revalidate: UPSTREAM_REVALIDATE } }
       );
       if (ratingsResponse.ok) {
         const ratings = await ratingsResponse.json();
@@ -182,7 +193,7 @@ async function fetchFromOpenLibrary(id: string): Promise<Book | null> {
     } catch {
       // Ratings metadata is optional.
     }
-    
+
     return {
       id,
       title: work.title || '',
@@ -214,33 +225,29 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    
-    // Determine source from ID format
+
+    // Google volume IDs are short and never start with "OL"; Open Library
+    // work IDs look like "OL12345W".
     const isGoogleId = id.length < 20 && !id.startsWith('OL');
-    
+
     let googleData: Book | null = null;
     let openLibraryData: Book | null = null;
-    
+
     if (isGoogleId) {
-      // Try Google first, fallback to Open Library
       googleData = await fetchFromGoogle(id);
       if (!googleData) {
-        // Search Open Library by title if we have it
         openLibraryData = await fetchFromOpenLibrary(id);
       }
     } else {
-      // It's an Open Library ID
       openLibraryData = await fetchFromOpenLibrary(id);
       if (!openLibraryData) {
         googleData = await fetchFromGoogle(id);
       }
     }
-    
-    // Merge data from both sources (prioritize based on quality)
+
     let book: Book | undefined;
-    
+
     if (googleData && openLibraryData) {
-      // Merge both - use best data from each
       book = {
         id,
         title: googleData.title || openLibraryData.title || 'Unknown Title',
@@ -253,9 +260,9 @@ export async function GET(
         categories: googleData.categories.length > 0 ? googleData.categories : openLibraryData.categories || [],
         averageRating: googleData.averageRating || openLibraryData.averageRating || 0,
         ratingsCount: googleData.ratingsCount || openLibraryData.ratingsCount || 0,
-        // Prefer Open Library covers (better quality)
-        thumbnail: openLibraryData.thumbnail || googleData.thumbnail || '/images/no-cover.jpg',
-        coverImage: openLibraryData.coverImage || googleData.coverImage || '/images/no-cover.jpg',
+        // Open Library covers tend to be higher resolution.
+        thumbnail: openLibraryData.thumbnail || googleData.thumbnail || '/images/no-cover.svg',
+        coverImage: openLibraryData.coverImage || googleData.coverImage || '/images/no-cover.svg',
         language: googleData.language || openLibraryData.language || 'en',
         isbn: googleData.isbn || openLibraryData.isbn || '',
         previewLink: googleData.previewLink || openLibraryData.previewLink || '',
@@ -268,8 +275,8 @@ export async function GET(
         title: googleData.title || 'Unknown Title',
         authors: googleData.authors.length > 0 ? googleData.authors : ['Unknown Author'],
         description: googleData.description || 'No description available',
-        thumbnail: googleData.thumbnail || '/images/no-cover.jpg',
-        coverImage: googleData.coverImage || '/images/no-cover.jpg',
+        thumbnail: googleData.thumbnail || '/images/no-cover.svg',
+        coverImage: googleData.coverImage || '/images/no-cover.svg',
       };
     } else if (openLibraryData) {
       book = {
@@ -278,8 +285,8 @@ export async function GET(
         title: openLibraryData.title || 'Unknown Title',
         authors: openLibraryData.authors.length > 0 ? openLibraryData.authors : ['Unknown Author'],
         description: openLibraryData.description || 'No description available',
-        thumbnail: openLibraryData.thumbnail || '/images/no-cover.jpg',
-        coverImage: openLibraryData.coverImage || '/images/no-cover.jpg',
+        thumbnail: openLibraryData.thumbnail || '/images/no-cover.svg',
+        coverImage: openLibraryData.coverImage || '/images/no-cover.svg',
       };
     } else {
       throw new Error('Book not found in any source');
@@ -288,7 +295,7 @@ export async function GET(
     if (!book) {
       throw new Error('Book transformation failed');
     }
-    
+
     return NextResponse.json(book);
   } catch (error) {
     console.error('Book detail error:', error);

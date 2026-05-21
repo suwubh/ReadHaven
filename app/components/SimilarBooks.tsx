@@ -16,12 +16,18 @@ interface Props {
   query: string;
   heading?: string;
   limit?: number;
+  excludeTitle?: string;
 }
 
 const buildResolveHref = (title: string, author: string) =>
   `/book/resolve?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`;
 
-export default function SimilarBooks({ query, heading = 'More like this', limit = 6 }: Props) {
+export default function SimilarBooks({
+  query,
+  heading = 'More like this',
+  limit = 6,
+  excludeTitle,
+}: Props) {
   const trimmed = query.trim();
   const [books, setBooks] = useState<RecommendedBook[]>([]);
   const [loading, setLoading] = useState(Boolean(trimmed));
@@ -58,6 +64,15 @@ export default function SimilarBooks({ query, heading = 'More like this', limit 
     return () => controller.abort();
   }, [trimmed, load]);
 
+  // The query for a book detail page includes that book's own title, so it can
+  // come back as its own closest match — drop it from the results.
+  const visibleBooks = excludeTitle
+    ? books.filter(
+        (book) =>
+          book.title.trim().toLowerCase() !== excludeTitle.trim().toLowerCase()
+      )
+    : books;
+
   if (!trimmed) return null;
   if (loading) {
     return (
@@ -75,13 +90,13 @@ export default function SimilarBooks({ query, heading = 'More like this', limit 
       </section>
     );
   }
-  if (books.length === 0) return null;
+  if (visibleBooks.length === 0) return null;
 
   return (
     <section className="similar-books-section">
       <h3>{heading}</h3>
       <div className="similar-books-row">
-        {books.map((book) => (
+        {visibleBooks.map((book) => (
           <Link
             key={book.id}
             href={buildResolveHref(book.title, book.author)}
@@ -90,10 +105,10 @@ export default function SimilarBooks({ query, heading = 'More like this', limit 
           >
             <div className="similar-book-cover">
               <img
-                src={book.coverUrl || '/images/no-cover.jpg'}
+                src={book.coverUrl || '/images/no-cover.svg'}
                 alt={book.title}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/no-cover.jpg';
+                  (e.target as HTMLImageElement).src = '/images/no-cover.svg';
                 }}
               />
             </div>

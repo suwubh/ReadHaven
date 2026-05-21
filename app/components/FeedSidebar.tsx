@@ -25,15 +25,6 @@ interface Props {
   currentUserId?: string;
 }
 
-interface LikeResponse {
-  liked: boolean;
-}
-
-const isLikeResponse = (value: unknown): value is LikeResponse => {
-  if (typeof value !== 'object' || value === null) return false;
-  return typeof (value as { liked?: unknown }).liked === 'boolean';
-};
-
 export default function FeedSidebar({ posts, currentUserId }: Props) {
   const router = useRouter();
   const [localPosts, setLocalPosts] = useState(posts);
@@ -96,24 +87,11 @@ export default function FeedSidebar({ posts, currentUserId }: Props) {
       });
 
       if (!response.ok) {
-        console.error('Like request failed:', response.status);
         throw new Error('Failed to toggle like');
       }
 
-      let parsed: unknown;
-      try {
-        parsed = await response.json();
-      } catch (parseError) {
-        console.error('Like response parse error:', parseError);
-        throw new Error('Invalid like response');
-      }
-
-      if (!isLikeResponse(parsed)) {
-        console.error('Invalid like response shape:', parsed);
-        throw new Error('Invalid like response');
-      }
-
-      setPostLikeState(parsed.liked, postId, currentUserId);
+      const data: { liked: boolean } = await response.json();
+      setPostLikeState(data.liked, postId, currentUserId);
     } catch (error) {
       console.error('Like error:', error);
       setPostLikeState(wasLiked, postId, currentUserId);

@@ -1,13 +1,5 @@
-function normalizeName(name: unknown): string {
-  return typeof name === 'string' ? name : String(name ?? '');
-}
-
-export function shelfNameToSlug(name: unknown): string {
-  const normalizedName = normalizeName(name);
-  return normalizedName.trim().toLowerCase().replace(/\s+/g, '-');
-}
-
-export function shelfNameToLegacySlug(name: unknown): string {
-  const normalizedName = normalizeName(name);
-  return normalizedName.toLowerCase().replace(/ /g, '-');
+// Default shelves have fixed names ("Want to Read", etc.); the slug is just a
+// URL-safe form of the name used in /shelf/[name] links.
+export function shelfNameToSlug(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-');
 }

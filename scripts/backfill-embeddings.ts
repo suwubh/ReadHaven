@@ -18,6 +18,27 @@ function textFor(book: BookRow): string {
   }`.slice(0, 1000);
 }
 
+// ivfflat trains its centroids on the data present when the index is created,
+// so the index is (re)built here — after embeddings exist — rather than in the
+// table migration, where the books table is still empty.
+async function buildVectorIndex() {
+  const result = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(*) AS count FROM "books" WHERE "embedding" IS NOT NULL
+  `;
+  const embedded = Number(result[0]?.count ?? 0);
+  if (embedded === 0) {
+    console.log('No embeddings present; skipping vector index build.');
+    return;
+  }
+
+  const lists = Math.max(1, Math.round(Math.sqrt(embedded)));
+  await prisma.$executeRawUnsafe('DROP INDEX IF EXISTS "books_embedding_cosine_idx"');
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX "books_embedding_cosine_idx" ON "books" USING ivfflat ("embedding" vector_cosine_ops) WITH (lists = ${lists})`
+  );
+  console.log(`Built ivfflat index over ${embedded} embeddings (lists = ${lists}).`);
+}
+
 async function main() {
   const rows = await prisma.$queryRaw<BookRow[]>`
     SELECT id, title, author, description, subjects
@@ -27,7 +48,6 @@ async function main() {
   `;
 
   console.log(`${rows.length} books need embeddings`);
-  if (rows.length === 0) return;
 
   let done = 0;
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
@@ -50,6 +70,7 @@ async function main() {
     }
   }
 
+  await buildVectorIndex();
   console.log('Done.');
 }
 

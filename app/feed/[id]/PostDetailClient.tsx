@@ -41,36 +41,6 @@ interface Props {
 
 const loginWithNoticeHref = '/login?notice=login-required';
 
-const isString = (value: unknown): value is string => typeof value === 'string';
-
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isCommentItem = (value: unknown): value is CommentItem => {
-  if (typeof value !== 'object' || value === null) return false;
-
-  const item = value as {
-    id?: unknown;
-    content?: unknown;
-    createdAt?: unknown;
-    user?: {
-      id?: unknown;
-      name?: unknown;
-      image?: unknown;
-    };
-  };
-
-  return (
-    isString(item.id) &&
-    isString(item.content) &&
-    isString(item.createdAt) &&
-    !!item.user &&
-    isString(item.user.id) &&
-    isNullableString(item.user.name) &&
-    isNullableString(item.user.image)
-  );
-};
-
 const normalizeImageUrl = (url: string) =>
   url.startsWith('http://') ? url.replace('http://', 'https://') : url;
 
@@ -117,32 +87,14 @@ export default function PostDetailClient({ post, currentUserId, likedByCurrentUs
         body: JSON.stringify({ content: trimmed }),
       });
 
-      let data: unknown = null;
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const message =
-          typeof data === 'object' &&
-          data !== null &&
-          'error' in data &&
-          typeof (data as { error?: unknown }).error === 'string'
-            ? (data as { error: string }).error
-            : 'Failed to add comment.';
-        setCommentError(message);
+        setCommentError(data?.error || 'Failed to add comment.');
         return;
       }
 
-      if (!isCommentItem(data)) {
-        console.error('Invalid comment response shape:', data);
-        setCommentError('Failed to add comment.');
-        return;
-      }
-
-      setComments((prev) => [...prev, data]);
+      setComments((prev) => [...prev, data as CommentItem]);
       setCommentContent('');
     } catch (error) {
       console.error('Create comment error:', error);

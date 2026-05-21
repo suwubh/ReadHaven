@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import ShelfPageClient from './ShelfPageClient';
 import { ensureDefaultShelves } from '@/lib/shelves';
-import { shelfNameToLegacySlug, shelfNameToSlug } from '@/lib/shelf-slug';
+import { shelfNameToSlug } from '@/lib/shelf-slug';
 
 interface PageProps {
   params: Promise<{
@@ -62,11 +62,9 @@ async function getShelfData(userId: string, shelfSlug: string) {
   });
 
   return (
-    userShelves.find((candidate) => {
-      const canonicalSlug = shelfNameToSlug(candidate.name);
-      const legacySlug = shelfNameToLegacySlug(candidate.name);
-      return normalizedSlug === canonicalSlug || normalizedSlug === legacySlug;
-    }) ?? null
+    userShelves.find(
+      (candidate) => normalizedSlug === shelfNameToSlug(candidate.name)
+    ) ?? null
   );
 }
 

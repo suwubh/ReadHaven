@@ -1,50 +1,46 @@
-jest.mock('next-auth', () => ({ getServerSession: jest.fn() }));
-jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 jest.mock('@/lib/recommendations', () => ({
-  recommendSimilarToBook: jest.fn(),
   recommendForQuery: jest.fn(),
-  recommendForUser: jest.fn(),
 }));
 
 import { GET } from '@/app/api/recommendations/route';
-import * as rec from '@/lib/recommendations';
-import { mockRequest, setSession } from '../../helpers';
+import { recommendForQuery } from '@/lib/recommendations';
+import { mockRequest } from '../../helpers';
+
+const recommend = recommendForQuery as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
 describe('GET /api/recommendations', () => {
-  it('similar mode when bookId given', async () => {
-    (rec.recommendSimilarToBook as jest.Mock).mockResolvedValue([{ id: 'b' }]);
-    const res = await GET(mockRequest('http://t/?bookId=b-1'));
+  it('returns books for a query', async () => {
+    recommend.mockResolvedValue([{ id: 'b-1', title: 'Dune' }]);
+    const res = await GET(mockRequest('http://t/?q=space+opera'));
     expect(res.status).toBe(200);
-    expect((await res.json()).mode).toBe('similar');
+    const body = await res.json();
+    expect(body.books).toHaveLength(1);
   });
 
-  it('query mode when q given', async () => {
-    (rec.recommendForQuery as jest.Mock).mockResolvedValue([]);
-    const res = await GET(mockRequest('http://t/?q=dragons'));
-    expect((await res.json()).mode).toBe('query');
-  });
-
-  it('user mode when authenticated and no params', async () => {
-    setSession('user-1');
-    (rec.recommendForUser as jest.Mock).mockResolvedValue([]);
+  it('400 when q is missing', async () => {
     const res = await GET(mockRequest('http://t/'));
-    expect((await res.json()).mode).toBe('user');
+    expect(res.status).toBe(400);
+    expect(recommend).not.toHaveBeenCalled();
   });
 
-  it('400 when no params and unauthenticated', async () => {
-    setSession(null);
-    const res = await GET(mockRequest('http://t/'));
+  it('400 when q is only whitespace', async () => {
+    const res = await GET(mockRequest('http://t/?q=%20%20'));
     expect(res.status).toBe(400);
   });
 
-  it('honours limit (clamps to max 20)', async () => {
-    (rec.recommendForQuery as jest.Mock).mockResolvedValue([]);
-    await GET(mockRequest('http://t/?q=hi&limit=9999'));
-    const limitArg = (rec.recommendForQuery as jest.Mock).mock.calls[0][1];
-    expect(limitArg).toBeLessThanOrEqual(20);
+  it('clamps limit to a maximum of 20', async () => {
+    recommend.mockResolvedValue([]);
+    await GET(mockRequest('http://t/?q=dragons&limit=9999'));
+    expect(recommend.mock.calls[0][1]).toBeLessThanOrEqual(20);
+  });
+
+  it('500 when the recommender throws', async () => {
+    recommend.mockRejectedValue(new Error('db down'));
+    const res = await GET(mockRequest('http://t/?q=dragons'));
+    expect(res.status).toBe(500);
   });
 });

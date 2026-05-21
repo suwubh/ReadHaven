@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { parseBoundedInt } from '@/lib/validation';
 
+// Search results change slowly; cache the upstream responses for an hour.
+const UPSTREAM_REVALIDATE = 60 * 60;
+
 interface OpenLibrarySearchResult {
   key?: string;
   title?: string;
@@ -33,11 +36,12 @@ async function searchOpenLibrary(query: string, offset: number, limit: number) {
   const response = await fetch(
     `https://openlibrary.org/search.json?q=${encodeURIComponent(
       query
-    )}&offset=${offset}&limit=${limit}&fields=key,title,author_name,first_publish_year,cover_i,isbn,ratings_average,ratings_count,subject`
+    )}&offset=${offset}&limit=${limit}&fields=key,title,author_name,first_publish_year,cover_i,isbn,ratings_average,ratings_count,subject`,
+    { next: { revalidate: UPSTREAM_REVALIDATE } }
   );
-  
+
   if (!response.ok) return null;
-  
+
   const data = await response.json();
   const docs: OpenLibrarySearchResult[] = Array.isArray(data?.docs)
     ? data.docs
@@ -50,7 +54,7 @@ async function searchOpenLibrary(query: string, offset: number, limit: number) {
     publishedDate: item.first_publish_year?.toString() || '',
     thumbnail: item.cover_i
       ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg`
-      : '/images/no-cover.jpg',
+      : '/images/no-cover.svg',
     averageRating: item.ratings_average || 0,
     ratingsCount: item.ratings_count || 0,
     categories: item.subject?.slice(0, 3) || [],
@@ -63,7 +67,8 @@ async function searchGoogleBooks(query: string, startIndex: number, maxResults: 
   const response = await fetch(
     `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
       query
-    )}&startIndex=${startIndex}&maxResults=${maxResults}`
+    )}&startIndex=${startIndex}&maxResults=${maxResults}`,
+    { next: { revalidate: UPSTREAM_REVALIDATE } }
   );
 
   if (!response.ok) return null;
@@ -78,7 +83,7 @@ async function searchGoogleBooks(query: string, startIndex: number, maxResults: 
     title: item.volumeInfo?.title || 'Unknown Title',
     authors: item.volumeInfo?.authors || ['Unknown Author'],
     publishedDate: item.volumeInfo?.publishedDate || '',
-    thumbnail: item.volumeInfo?.imageLinks?.thumbnail || '/images/no-cover.jpg',
+    thumbnail: item.volumeInfo?.imageLinks?.thumbnail || '/images/no-cover.svg',
     averageRating: item.volumeInfo?.averageRating || 0,
     ratingsCount: item.volumeInfo?.ratingsCount || 0,
     categories: item.volumeInfo?.categories || [],
@@ -129,15 +134,8 @@ export async function GET(request: Request) {
       return (b.publishedDate || '0') > (a.publishedDate || '0') ? 1 : -1;
     });
 
-    const books = sortedBooks.slice(0, limit).map((book) => ({
-      ...book,
-      description: '',
-      pageCount: 0,
-      language: 'en',
-    }));
-
     return NextResponse.json({
-      books,
+      books: sortedBooks.slice(0, limit),
       totalItems: uniqueBooks.length,
       currentPage: page,
       hasMore: uniqueBooks.length > limit,

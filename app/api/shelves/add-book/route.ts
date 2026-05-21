@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { ensureDefaultShelves } from '@/lib/shelves';
+import { recordActivity } from '@/lib/activity';
 
 export async function POST(request: Request) {
   try {
@@ -68,6 +69,14 @@ export async function POST(request: Request) {
 
     const shelfBook = await prisma.shelfBook.create({
       data: { shelfId, bookId, title, authors, thumbnail },
+    });
+
+    await recordActivity({
+      userId: session.user.id,
+      type: 'added_book',
+      bookId,
+      bookTitle: title,
+      bookCover: thumbnail,
     });
 
     return NextResponse.json({ data: shelfBook }, { status: 201 });

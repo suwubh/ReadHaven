@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function HeroSection() {
   const [typewriterText, setTypewriterText] = useState('');
@@ -31,18 +32,13 @@ export default function HeroSection() {
     };
   }, []);
 
-  const handleRefresh = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.location.reload();
-  };
-
   return (
     <div className="hero-section">
       <img src="/images/cover.jpg" alt="Books Background" />
-      
-      <a href="#" className="overlay-text" onClick={handleRefresh}>
+
+      <Link href="/" className="overlay-text">
         ReadHaven
-      </a>
+      </Link>
 
       <div className="hero-content">
         <h1 className="hero-title">

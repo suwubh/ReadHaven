@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 interface Recommendation {
   title: string;
@@ -112,7 +113,7 @@ async function fetchBookFromSearch(rec: Recommendation, baseUrl: string) {
     return {
       ...first,
       description: first.description || 'A highly recommended book.',
-      thumbnail: first.thumbnail || '/images/no-cover.jpg',
+      thumbnail: first.thumbnail || '/images/no-cover.svg',
     };
   }
 
@@ -122,7 +123,7 @@ async function fetchBookFromSearch(rec: Recommendation, baseUrl: string) {
     title: full.title || first.title,
     authors: full.authors?.length ? full.authors : first.authors || ['Unknown Author'],
     thumbnail:
-      full.coverImage || full.thumbnail || first.thumbnail || '/images/no-cover.jpg',
+      full.coverImage || full.thumbnail || first.thumbnail || '/images/no-cover.svg',
     averageRating: full.averageRating || first.averageRating || 0,
     ratingsCount: full.ratingsCount || first.ratingsCount || 0,
     description: full.description || first.description || 'A highly recommended book.',
@@ -154,7 +155,7 @@ async function fillFromCategorySearch(
     extras.push({
       ...book,
       description: book.description || 'A highly recommended book.',
-      thumbnail: book.thumbnail || '/images/no-cover.jpg',
+      thumbnail: book.thumbnail || '/images/no-cover.svg',
     });
   }
   return extras;
@@ -162,6 +163,17 @@ async function fillFromCategorySearch(
 
 export async function POST(request: Request) {
   try {
+    // This endpoint calls the paid Groq API, so cap how often a client can hit it.
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
+    const limited = rateLimit(`awards:${ip}`, 10, 60_000);
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+      );
+    }
+
     const body = await request.json().catch(() => null);
     const category =
       body && typeof (body as { category?: unknown }).category === 'string'

@@ -30,7 +30,6 @@ module.exports = {
     '!lib/embeddings.ts',
     '!lib/recommendations.ts',
     '!lib/prisma.ts',
-    '!lib/auth.ts',
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',

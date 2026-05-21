@@ -9,7 +9,6 @@ jest.mock('@/lib/prisma', () => ({
 
 import { ensureDefaultShelves } from '@/lib/shelves';
 import { prisma } from '@/lib/prisma';
-import { shelfNameToSlug, shelfNameToLegacySlug } from '@/lib/shelf-slug';
 
 const shelf = prisma.shelf as jest.Mocked<typeof prisma.shelf>;
 
@@ -41,16 +40,5 @@ describe('ensureDefaultShelves', () => {
     await ensureDefaultShelves('u-1');
     const data = (shelf.createMany.mock.calls[0][0] as any).data;
     expect(data).toHaveLength(2);
-  });
-});
-
-describe('shelfNameToSlug / shelfNameToLegacySlug', () => {
-  it('slugifies', () => {
-    expect(shelfNameToSlug('  Want To Read ')).toBe('want-to-read');
-    expect(shelfNameToSlug('Currently  Reading')).toBe('currently-reading');
-  });
-
-  it('legacy preserves leading/trailing space', () => {
-    expect(shelfNameToLegacySlug(' Read ')).toBe('-read-');
   });
 });

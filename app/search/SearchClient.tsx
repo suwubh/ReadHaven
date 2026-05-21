@@ -10,7 +10,6 @@ interface Book {
   id: string;
   title: string;
   authors: string[];
-  description: string;
   thumbnail: string;
   averageRating: number;
   ratingsCount: number;
@@ -141,7 +140,7 @@ export default function SearchClient() {
                         src={book.thumbnail}
                         alt={book.title}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/images/no-cover.jpg';
+                          (e.target as HTMLImageElement).src = '/images/no-cover.svg';
                         }}
                       />
                     </div>
@@ -170,11 +169,6 @@ export default function SearchClient() {
                         </span>
                       </div>
                     )}
-
-                    <p className="book-description">
-                      {book.description ? book.description.substring(0, 150) : ''}
-                      {book.description && book.description.length > 150 ? '...' : ''}
-                    </p>
 
                     {book.publishedDate && (
                       <p className="book-published">

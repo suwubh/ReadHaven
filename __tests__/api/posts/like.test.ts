@@ -64,4 +64,41 @@ describe('POST /api/posts/like', () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it('treats a concurrent like (P2002) as already liked', async () => {
+    like.findUnique.mockResolvedValue(null);
+    const { Prisma } = require('@prisma/client');
+    like.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('duplicate', {
+        code: 'P2002',
+        clientVersion: 'x',
+      })
+    );
+    const res = await POST(
+      mockRequest('http://t/api/posts/like', {
+        method: 'POST',
+        json: { postId: 'p-1' },
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ liked: true });
+  });
+
+  it('404 when postId references no post (P2003)', async () => {
+    like.findUnique.mockResolvedValue(null);
+    const { Prisma } = require('@prisma/client');
+    like.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('fk violation', {
+        code: 'P2003',
+        clientVersion: 'x',
+      })
+    );
+    const res = await POST(
+      mockRequest('http://t/api/posts/like', {
+        method: 'POST',
+        json: { postId: 'missing' },
+      })
+    );
+    expect(res.status).toBe(404);
+  });
 });
