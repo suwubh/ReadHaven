@@ -7,6 +7,84 @@ locally-seeded book catalogue.
 
 Live demo: https://read-haven-sandy.vercel.app
 
+```mermaid
+graph TB
+    subgraph Client["Browser / Client"]
+        UI["Next.js App Router\nPages & Components"]
+    end
+
+    subgraph Auth["Authentication"]
+        NA["NextAuth.js\nJWT sessions"]
+        CP["Credentials\nEmail + bcrypt"]
+        OA["OAuth\nGoogle · GitHub"]
+        NA --> CP
+        NA --> OA
+    end
+
+    subgraph API["API Layer  (/api/*)"]
+        AR["Auth · Register"]
+        BS["Books · Search · Detail"]
+        SH["Shelves · Add · Remove"]
+        RV["Reviews · CRUD"]
+        PS["Posts · Likes · Comments"]
+        FR["Friends · Request · Accept · Remove"]
+        RG["Reading Goal · Upsert"]
+        RC["Recommendations\n(vector search)"]
+        AW["Awards\n(Groq LLM)"]
+    end
+
+    subgraph External["External APIs"]
+        GB["Google Books API"]
+        OL["Open Library API"]
+        GR["Groq API\nllama-3.1-8b-instant"]
+    end
+
+    subgraph Embed["Local Embeddings"]
+        XT["@xenova/transformers\nONNX runtime"]
+        ML["all-MiniLM-L6-v2\n384-dim vectors"]
+        XT --> ML
+    end
+
+    subgraph DB["PostgreSQL + pgvector"]
+        PR["Prisma ORM"]
+        TU["users · accounts · sessions"]
+        TS["shelves · shelf_books"]
+        TR["reviews · reading_goals"]
+        TP["posts · likes · comments"]
+        TF["friendships · activities"]
+        TB["books + ivfflat index\nvector(384) embeddings"]
+        PR --> TU & TS & TR & TP & TF & TB
+    end
+
+    subgraph Scripts["Seed Scripts"]
+        SB["seed-books.ts\nOpen Library bulk fetch"]
+        SE["backfill-embeddings.ts\nEmbed + build ivfflat index"]
+    end
+
+    subgraph CI["GitHub Actions CI"]
+        LN["ESLint"]
+        TC["tsc --noEmit"]
+        JT["Jest · 132 tests\n88% statement coverage"]
+        BL["next build"]
+        LN --> TC --> JT --> BL
+    end
+
+    UI --> NA
+    UI --> API
+
+    AR --> DB
+    BS --> GB & OL
+    SH & RV & PS & FR & RG --> DB
+    RC --> Embed
+    RC --> DB
+    AW --> GR
+    AW --> BS
+
+    Scripts --> OL
+    Scripts --> DB
+    SE --> Embed
+```
+
 ## Tech stack
 
 - **Next.js 16** (App Router, server components, route handlers)
